@@ -1,9 +1,14 @@
 const Router = require('express');
 const router = new Router();
+const authMiddleware = require('../middleware/AuthMiddleware');
+const checkRole = require('../middleware/roleMiddleware');
 const employeeCrudController = require('../controllers/admin/employeeCrudController');
 const regDepartCrudController = require('../controllers/admin/regDepartCrudController');
 const userCrudController = require('../controllers/admin/userCrudController');
 
+// Все маршруты доступны только для пользователей с ролью 'admin'
+router.use(authMiddleware);
+router.use(checkRole(['admin']));
 
 router.get('/employees', employeeCrudController.getAllEmployees);
 router.post('/employees', employeeCrudController.createEmployee);
