@@ -1,16 +1,11 @@
 const Router = require('express');
 const router = new Router();
-const authMiddleware = require('../middleware/AuthMiddleware');
-const checkRole = require('../middleware/roleMiddleware');
 const regDocCrudController = require('../controllers/employee/regDocCrudController');
 const ownerController = require('../controllers/employee/ownerController');
 const regOpController = require('../controllers/employee/regOpController');
 const workController = require('../controllers/employee/workController');
 const vehicleController = require('../controllers/employee/vehicleController');
 
-// Все маршруты доступны только для пользователей с ролью 'employee'
-router.use(authMiddleware);
-router.use(checkRole(['employee']));
 
 router.get('/reg-docs', regDocCrudController.getAllRegDoc);
 router.get('/reg-docs/:id', regDocCrudController.getRegDocById);
