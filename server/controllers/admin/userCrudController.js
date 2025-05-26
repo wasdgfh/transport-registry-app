@@ -7,37 +7,43 @@ const bcrypt = require('bcrypt');
 
 const userSchema = Joi.object({
     email: Joi.string().email().required(),
-    password: Joi.string().min(6).max(50).required(),
-    role: Joi.string().valid('user', 'admin').required(),
-    isActive: Joi.boolean().required()
+    password: Joi.string().min(8).max(50).required(),
+    role: Joi.string().valid('ADMIN', 'EMPLOYEE', 'OWNER').required(),
+    passportData: Joi.string().optional().allow(null),
+    taxNumber: Joi.string().optional().allow(null),
+    badgeNumber: Joi.string().optional().allow(null)
+});
+
+const userPatchSchema = Joi.object({
+    role: Joi.string().valid('ADMIN', 'EMPLOYEE', 'OWNER').optional(),
+    passportData: Joi.string().optional().allow(null),
+    taxNumber: Joi.string().optional().allow(null),
+    badgeNumber: Joi.string().optional().allow(null)
 });
 
 class UserCrudController {
-    /**
-     * Get all users with filtering and pagination
-     * @param {Object} req - Express request object
-     * @param {Object} res - Express response object
-     * @param {Function} next - Express next middleware function
-     */
+
     async getAllUser(req, res, next) {
         try {
-            const { error } = Joi.object({
-                limit: Joi.number().integer().min(1).max(100).default(20),
+            const { error, value } = Joi.object({
+                limit: Joi.number().integer().min(1).max(50).default(15),
                 page: Joi.number().integer().min(1).default(1),
                 search: Joi.string().optional(),
-                role: Joi.string().valid('user', 'admin').optional()
+                role: Joi.string().valid('ADMIN', 'EMPLOYEE', 'OWNER').optional()
             }).validate(req.query);
 
             if (error) throw ApiError.badRequest(error.details[0].message);
 
-            const { limit, page, search, role } = req.query;
+            const { limit, page, search, role } = value;
             const offset = (page - 1) * limit;
 
             const where = {};
             if (search) {
                 where.email = { [Op.like]: `%${search}%` };
             }
-            if (role) where.role = role;
+            if (role) {
+                where.role = role;
+            }
 
             const { count, rows } = await User.findAndCountAll({
                 where,
@@ -50,48 +56,73 @@ class UserCrudController {
             res.json({
                 total: count,
                 pages: Math.ceil(count / limit),
-                currentPage: +page,
+                currentPage: page,
                 data: rows
             });
         } catch (e) {
+            console.error("GET ALL ERROR:", e);
             next(ApiError.internal(e.message));
         }
     }
 
-    /**
-     * Create new user
-     * @param {Object} req - Express request object
-     * @param {Object} res - Express response object
-     * @param {Function} next - Express next middleware function
-     */
+    async getUserByEmail(req, res, next) {
+        try {
+            const { email } = req.params;
+
+            if (!email) {
+                throw ApiError.badRequest('Email is required');
+            }
+
+            const user = await User.findOne({
+                where: { email },
+                attributes: { exclude: ['password'] }
+            });
+
+            if (!user) {
+                throw ApiError.notFound('User not found');
+            }
+
+            res.json(user);
+        } catch (e) {
+            console.error("GET BY EMAIL ERROR:", e);
+            next(ApiError.internal(e.message));
+        }
+    }
+
     async createUser(req, res, next) {
         const transaction = await sequelize.transaction();
+        const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS) || 10;
         
         try {
             const { error } = userSchema.validate(req.body);
             if (error) throw ApiError.badRequest(error.details[0].message);
 
-            const { email, password } = req.body;
+            const { email, password, passportData, taxNumber, badgeNumber } = req.body;
 
-            // Проверка на существование пользователя с таким email
-            const existingUser = await User.findOne({
-                where: { email },
-                transaction
-            });
+            const existingEmail = await User.findOne({ where: { email }, transaction });
+            if (existingEmail) throw ApiError.conflict('User with this email already exists');
 
-            if (existingUser) {
-                throw ApiError.conflict('User with this email already exists');
+            if (passportData) {
+                const existingPassport = await User.findOne({ where: { passportData }, transaction });
+                if (existingPassport) throw ApiError.conflict('User with this passport data already exists');
             }
 
-            // Хеширование пароля
-            const hashedPassword = await bcrypt.hash(password, 5);
+            if (taxNumber) {
+                const existingTax = await User.findOne({ where: { taxNumber }, transaction });
+                if (existingTax) throw ApiError.conflict('User with this tax number already exists');
+            }
+
+            if (badgeNumber) {
+                const existingBadge = await User.findOne({ where: { badgeNumber }, transaction });
+                if (existingBadge) throw ApiError.conflict('User with this badge number already exists');
+            }
+
+            const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
             const user = await User.create({
                 ...req.body,
                 password: hashedPassword
-            }, {
-                transaction
-            });
+            }, { transaction });
 
             const { password: _, ...userWithoutPassword } = user.toJSON();
 
@@ -99,49 +130,46 @@ class UserCrudController {
             res.status(201).json(userWithoutPassword);
         } catch (e) {
             await transaction.rollback();
-            next(e);
+            console.error("CREATE ERROR:", e);
+            next(ApiError.internal(e.message)); 
         }
     }
 
-    /**
-     * Update user
-     * @param {Object} req - Express request object
-     * @param {Object} res - Express response object
-     * @param {Function} next - Express next middleware function
-     */
-    async updateUser(req, res, next) {
+    async patchUser(req, res, next) {
         const transaction = await sequelize.transaction();
         
         try {
-            const { id } = req.params;
-            const { error } = userSchema.validate(req.body);
+            const { email } = req.params;
+            if (!email) {
+                throw ApiError.badRequest('Email is required');
+            }
+
+            const { error, value  } = userPatchSchema.validate(req.body);
             if (error) throw ApiError.badRequest(error.details[0].message);
 
-            const user = await User.findByPk(id, { transaction });
+            const { passportData, taxNumber, badgeNumber } = value;
+
+            const user = await User.findOne({ where: { email }, transaction });
             if (!user) {
                 throw ApiError.notFound('User not found');
             }
 
-            // Проверка на уникальность email
-            if (req.body.email && req.body.email !== user.email) {
-                const existingUser = await User.findOne({
-                    where: { email: req.body.email },
-                    transaction
-                });
-
-                if (existingUser) {
-                    throw ApiError.conflict('User with this email already exists');
-                }
+            if (passportData !== undefined && passportData !== user.passportData) {
+                const existing = await User.findOne({ where: { passportData }, transaction });
+                if (existing) throw ApiError.conflict('Passport data already used by another user');
             }
 
-            // Хеширование нового пароля если он изменяется
-            if (req.body.password) {
-                req.body.password = await bcrypt.hash(req.body.password, 5);
+            if (taxNumber !== undefined && taxNumber !== user.taxNumber) {
+                const existing = await User.findOne({ where: { taxNumber }, transaction });
+                if (existing) throw ApiError.conflict('Tax number already used by another user');
             }
 
-            await user.update(req.body, {
-                transaction
-            });
+            if (badgeNumber !== undefined && badgeNumber !== user.badgeNumber) {
+                const existing = await User.findOne({ where: { badgeNumber }, transaction });
+                if (existing) throw ApiError.conflict('Badge number already used by another user');
+            }
+
+            await user.update(value, { transaction });
 
             const { password: _, ...userWithoutPassword } = user.toJSON();
 
@@ -149,23 +177,21 @@ class UserCrudController {
             res.json(userWithoutPassword);
         } catch (e) {
             await transaction.rollback();
-            next(e);
+            console.error('PATCH ERROR:', e);
+            next(ApiError.internal(e.message));
         }
     }
 
-    /**
-     * Delete user
-     * @param {Object} req - Express request object
-     * @param {Object} res - Express response object
-     * @param {Function} next - Express next middleware function
-     */
     async deleteUser(req, res, next) {
         const transaction = await sequelize.transaction();
         
         try {
-            const { id } = req.params;
+            const { email } = req.params;
+            if (!email) {
+                throw ApiError.badRequest('Email is required');
+            }
 
-            const user = await User.findByPk(id, { transaction });
+            const user = await User.findOne({ where: { email }, transaction });
             if (!user) {
                 throw ApiError.notFound('User not found');
             }
@@ -176,7 +202,8 @@ class UserCrudController {
             res.status(204).send();
         } catch (e) {
             await transaction.rollback();
-            next(e);
+            console.error('DELETE ERROR:', e);
+            next(ApiError.internal(e.message));
         }
     }
 }

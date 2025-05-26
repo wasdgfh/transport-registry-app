@@ -17,8 +17,9 @@ router.patch('/reg-depart/:unitCode', regDepartCrudController.patchRegDepart);
 router.delete('/reg-depart/:unitCode', regDepartCrudController.deleteRegDepart);
 
 router.get('/users', userCrudController.getAllUser);
+router.get('/users/:email', userCrudController.getUserByEmail);
 router.post('/users', userCrudController.createUser);
-router.put('/users/:id', userCrudController.updateUser);
-router.delete('/users/:id', userCrudController.deleteUser);
+router.patch('/users/:email', userCrudController.patchUser);
+router.delete('/users/:email', userCrudController.deleteUser);
 
 module.exports = router;
