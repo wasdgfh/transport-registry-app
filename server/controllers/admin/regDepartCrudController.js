@@ -68,7 +68,7 @@ class RegDepartCrudController {
             });
         } catch (e) {
             console.error("GET ALL ERROR:", e);
-            next(ApiError.internal(e.message));
+            next(e);
         }
     }
 
@@ -94,7 +94,7 @@ class RegDepartCrudController {
             res.json(department);
         } catch (e) {
             console.error('GET DEPARTMENT BY FIELD ERROR:', e);
-            next(ApiError.internal(e.message));
+            next(e);
         }
     }
 
@@ -131,7 +131,7 @@ class RegDepartCrudController {
         } catch (e) {
             await transaction.rollback();
             console.error("CREATE ERROR:", e);
-            next(ApiError.internal(e.message)); 
+            next(e);
         }
     }
 
@@ -178,7 +178,7 @@ class RegDepartCrudController {
         } catch (e) {
             await transaction.rollback();
             console.error('UPDATE ERROR:', e);
-            next(ApiError.internal(e.message));
+            next(e);
         }
     }
 
@@ -220,7 +220,7 @@ class RegDepartCrudController {
         } catch (e) {
             await transaction.rollback();
             console.error('PATCH ERROR:', e);
-            next(ApiError.internal(e.message));
+            next(e);
         }
     }
 
@@ -251,7 +251,7 @@ class RegDepartCrudController {
         } catch (e) {
             await transaction.rollback();
             console.error('DELETE ERROR:', e);
-            next(ApiError.internal(e.message));
+            next(e);
         }
     }
 }
