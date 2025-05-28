@@ -1,4 +1,4 @@
-const { User } = require('../../models/associations');
+const { User, Employee } = require('../../models/associations');
 const ApiError = require("../../error/ApiError");
 const Joi = require('joi');
 const { Op } = require('sequelize');
@@ -9,18 +9,44 @@ const userSchema = Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().min(8).max(50).required(),
     role: Joi.string().valid('ADMIN', 'EMPLOYEE', 'OWNER').required(),
-    passportData: Joi.string().optional().allow(null),
-    taxNumber: Joi.string().optional().allow(null),
-    badgeNumber: Joi.string().optional().allow(null)
+    passportData: Joi.string().pattern(/^\d{4} \d{6}$/).optional().allow(null)
+        .messages({ 'string.pattern.base': 'passportData must match format "1234 567890"' }),
+    taxNumber: Joi.string().pattern(/^\d{10}$/).optional().allow(null)
+        .messages({ 'string.pattern.base': 'taxNumber must contain exactly 10 digits' }),
+    badgeNumber: Joi.string().pattern(/^\d{2}-\d{4}$/).optional().allow(null)
+        .messages({ 'string.pattern.base': 'badgeNumber must match format "12-3456"' })
+}).custom((value, helpers) => {
+  const { role, passportData, taxNumber, badgeNumber, unitCode, email, password } = value;
+
+  if (role === 'EMPLOYEE') {
+    if (!badgeNumber) return helpers.error('any.invalid', { message: 'EMPLOYEE must provide badgeNumber' });
+  }
+
+  if (role === 'OWNER') {
+    if (!passportData && !taxNumber) return helpers.error('any.invalid', { message: 'Provide either passportData or taxNumber' });
+    if (passportData && taxNumber) return helpers.error('any.invalid', { message: 'Only one of passportData or taxNumber allowed' });
+  }
+
+  if (role === 'ADMIN') {
+    if (!email || !password) return helpers.error('any.invalid', { message: 'ADMIN must provide email and password' });
+    if (passportData || taxNumber || badgeNumber) {
+      return helpers.error('any.invalid', { message: 'ADMIN should not provide identity fields' });
+    }
+  }
+
+  return value;
 });
 
 const userPatchSchema = Joi.object({
     email: Joi.string().email().optional(),
     password: Joi.string().min(8).max(50).optional(),
     role: Joi.string().valid('ADMIN', 'EMPLOYEE', 'OWNER').optional(),
-    passportData: Joi.string().optional().allow(null),
-    taxNumber: Joi.string().optional().allow(null),
-    badgeNumber: Joi.string().optional().allow(null)
+    passportData: Joi.string().pattern(/^\d{4} \d{6}$/).optional().allow(null)
+        .messages({ 'string.pattern.base': 'passportData must match format "1234 567890"' }),
+    taxNumber: Joi.string().pattern(/^\d{10}$/).optional().allow(null)
+        .messages({ 'string.pattern.base': 'taxNumber must contain exactly 10 digits' }),
+    badgeNumber: Joi.string().pattern(/^\d{2}-\d{4}$/).optional().allow(null)
+        .messages({ 'string.pattern.base': 'badgeNumber must match format "12-3456"' })
 }).min(1);
 
 class UserCrudController {
@@ -63,7 +89,7 @@ class UserCrudController {
             });
         } catch (e) {
             console.error("GET ALL ERROR:", e);
-            next(ApiError.internal(e.message));
+            next(e);
         }
     }
 
@@ -93,7 +119,7 @@ class UserCrudController {
             res.json(user);
         } catch (e) {
             console.error("GET BY FIELD ERROR:", e);
-            next(ApiError.internal(e.message));
+            next(e);
         }
     }
 
@@ -102,44 +128,72 @@ class UserCrudController {
         const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS) || 10;
         
         try {
-            const { error } = userSchema.validate(req.body);
-            if (error) throw ApiError.badRequest(error.details[0].message);
+            const { error, value } = userSchema.validate(req.body);
+            if (error) throw ApiError.badRequest(error.message);
 
-            const { email, password, passportData, taxNumber, badgeNumber } = req.body;
+            const { role, badgeNumber, passportData, taxNumber, email, password } = value;
 
-            const existingEmail = await User.findOne({ where: { email }, transaction });
-            if (existingEmail) throw ApiError.conflict('User with this email already exists');
-
-            if (passportData) {
-                const existingPassport = await User.findOne({ where: { passportData }, transaction });
-                if (existingPassport) throw ApiError.conflict('User with this passport data already exists');
+            let finalEmail = email;
+            let finalPassword = password;
+            
+            if (finalEmail) {
+                const existingEmail = await User.findOne({ where: { email }, transaction });
+                if (existingEmail) throw ApiError.conflict('User with this email already exists');
             }
 
-            if (taxNumber) {
-                const existingTax = await User.findOne({ where: { taxNumber }, transaction });
-                if (existingTax) throw ApiError.conflict('User with this tax number already exists');
+            if (role === 'EMPLOYEE') {
+                if (!badgeNumber) throw ApiError.badRequest('badgeNumber is required');
+
+                const employee = await Employee.findOne({ where: { badgeNumber }, transaction });
+                if (!employee) throw ApiError.notFound('Employee not found');
+
+
+                const existingUser = await User.findOne({ where: { badgeNumber }, transaction });
+                if (existingUser) throw ApiError.conflict('User for this employee already exists');
+
+                finalEmail = `${generateRandomString(10)}@employee.ru`;
+                finalPassword = generateRandomString(12); 
+
+                // Это временная тема, пока что-то умнее не придумаю, 
+                // можно было бы и через pgAdmin смотреть, но там пароль с хешем
+                console.log(`Сгенерированный пароль для сотрудника: ${finalPassword}`);
             }
 
-            if (badgeNumber) {
-                const existingBadge = await User.findOne({ where: { badgeNumber }, transaction });
-                if (existingBadge) throw ApiError.conflict('User with this badge number already exists');
+            if (role === 'OWNER') {
+                if (!passportData && !taxNumber) throw ApiError.badRequest('OWNER must provide either passportData or taxNumber');
+                if (passportData && taxNumber) throw ApiError.badRequest('Provide only one of passportData or taxNumber');
+
+                if (passportData) {
+                    const person = await NaturalPerson.findOne({ where: { passportData }, transaction });
+                    if (!person) throw ApiError.notFound('NaturalPerson not found');
+                }
+
+                if (taxNumber) {
+                    const entity = await LegalEntity.findOne({ where: { taxNumber }, transaction });
+                    if (!entity) throw ApiError.notFound('LegalEntity not found');
+                }
             }
 
-            const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+            const hashedPassword = await bcrypt.hash(finalPassword, SALT_ROUNDS);
 
             const user = await User.create({
-                ...req.body,
-                password: hashedPassword
+                email: finalEmail,
+                password: hashedPassword,
+                role,
+                passportData: passportData || null,
+                taxNumber: taxNumber || null,
+                badgeNumber: badgeNumber || null
             }, { transaction });
+
+            await transaction.commit();
 
             const { password: _, ...userWithoutPassword } = user.toJSON();
 
-            await transaction.commit();
             res.status(201).json(userWithoutPassword);
         } catch (e) {
             await transaction.rollback();
             console.error("CREATE ERROR:", e);
-            next(ApiError.internal(e.message)); 
+            next(e);
         }
     }
 
@@ -196,7 +250,7 @@ class UserCrudController {
         } catch (e) {
             await transaction.rollback();
             console.error('PATCH ERROR:', e);
-            next(ApiError.internal(e.message));
+            next(e);
         }
     }
 
@@ -221,7 +275,7 @@ class UserCrudController {
         } catch (e) {
             await transaction.rollback();
             console.error('DELETE ERROR:', e);
-            next(ApiError.internal(e.message));
+            next(e);
         }
     }
 }
