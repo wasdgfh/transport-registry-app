@@ -2,88 +2,165 @@ const request = require('supertest');
 const app = require('../../app');
 
 describe('Employee API', () => {
-    const department = {
-        unitCode: '123456',
-        departmentName: 'Тестовый отдел',
-        address: 'г. Тестовск, ул. Проверочная, 1'
-    };
+  const department = {
+    unitCode: '123456',
+    departmentName: 'Тестовый отдел',
+    address: 'г. Тестовск, ул. Проверочная, 1'
+  };
 
-    const employeeData = {
-        badgeNumber: '12-3456',
+  const employeeData = {
+    badgeNumber: '12-3456',
+    unitCode: department.unitCode,
+    lastName: 'Иванов',
+    firstName: 'Иван',
+    patronymic: 'Иванович',
+    rank: 'Капитан'
+  };
+
+  const updatedData = {
+    unitCode: department.unitCode,
+    lastName: 'Петров',
+    firstName: 'Пётр',
+    patronymic: 'Петрович',
+    rank: 'Подполковник'
+  };
+
+  beforeAll(async () => {
+    await request(app).post('/api/admin/reg-depart').send(department);
+
+    for (let i = 0; i < 5; i++) {
+      await request(app).post('/api/admin/employees').send({
+        badgeNumber: `12-34${i}${i}`,
         unitCode: department.unitCode,
-        lastName: 'Иванов',
-        firstName: 'Иван',
-        patronymic: 'Иванович',
-        rank: 'Капитан'
-    };
+        lastName: `Тестов${i}`,
+        firstName: `Имя${i}`,
+        patronymic: `Отчество${i}`,
+        rank: i % 2 === 0 ? 'Майор' : 'Лейтенант'
+      });
+    }
+  });
 
-    const updatedData = {
-        unitCode: department.unitCode,
-        lastName: 'Петров',
-        firstName: 'Пётр',
-        patronymic: 'Петрович',
-        rank: 'Подполковник'
-    };
+  afterAll(async () => {
+    const allBadges = ['12-3456', '12-3400', '12-3411', '12-3422', '12-3433', '12-3444'];
+    for (const badge of allBadges) {
+      await request(app).delete(`/api/admin/employees/${badge}`).catch(() => {});
+    }
+    await request(app).delete(`/api/admin/reg-depart/${department.unitCode}`).catch(() => {});
+  });
 
-    beforeAll(async () => {
-        await request(app).post('/api/admin/reg-depart').send(department);
+  describe('Create & Read', () => {
+    // Должен создать сотрудника
+    test('should create an employee', async () => {
+      const res = await request(app).post('/api/admin/employees').send(employeeData);
+      expect(res.statusCode).toBe(201);
+      expect(res.body).toHaveProperty('badgeNumber', employeeData.badgeNumber);
     });
 
-    afterAll(async () => {
-        await request(app).delete(`/api/admin/employees/${employeeData.badgeNumber}`).catch(() => {});
-        await request(app).delete(`/api/admin/reg-depart/${department.unitCode}`).catch(() => {});
+    // Должен вернуть список сотрудников
+    test('should return list of employees', async () => {
+      const res = await request(app).get('/api/admin/employees');
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data.length).toBeGreaterThanOrEqual(1);
     });
 
-    test('POST /api/admin/employees — should create an employee', async () => {
-        const res = await request(app).post('/api/admin/employees').send(employeeData);
-        expect(res.statusCode).toBe(201);
-        expect(res.body).toHaveProperty('badgeNumber', employeeData.badgeNumber);
-    });
-
-    test('GET /api/admin/employees — should return list', async () => {
-        const res = await request(app).get('/api/admin/employees');
-        expect(res.statusCode).toBe(200);
-        expect(res.body.data).toEqual(
-        expect.arrayContaining([
-            expect.objectContaining({ badgeNumber: employeeData.badgeNumber })
-        ])
-        );
-    });
-
-    test('GET /api/admin/employees/search — should find by badgeNumber', async () => {
-        const res = await request(app)
+    // Должен найти сотрудника по номеру значка
+    test('should find employee by badgeNumber', async () => {
+      const res = await request(app)
         .get('/api/admin/employees/search')
         .query({ badgeNumber: employeeData.badgeNumber });
-        expect(res.statusCode).toBe(200);
-        expect(res.body.badgeNumber).toBe(employeeData.badgeNumber);
+      expect(res.statusCode).toBe(200);
+      expect(res.body.badgeNumber).toBe(employeeData.badgeNumber);
     });
+  });
 
-    test('PUT /api/admin/employees/:badgeNumber — should update all fields', async () => {
-        const res = await request(app)
+  describe('Update', () => {
+    // Должен обновить все поля (PUT)
+    test('should update all fields (PUT)', async () => {
+      const res = await request(app)
         .put(`/api/admin/employees/${employeeData.badgeNumber}`)
         .send(updatedData);
-        expect(res.statusCode).toBe(200);
-        expect(res.body.lastName).toBe(updatedData.lastName);
-        expect(res.body.rank).toBe(updatedData.rank);
+      expect(res.statusCode).toBe(200);
+      expect(res.body.lastName).toBe(updatedData.lastName);
     });
 
-    test('PATCH /api/admin/employees/:badgeNumber — should update rank', async () => {
-        const res = await request(app)
+    // Должен обновить только звание (PATCH)
+    test('should update rank (PATCH)', async () => {
+      const res = await request(app)
         .patch(`/api/admin/employees/${employeeData.badgeNumber}`)
         .send({ rank: 'Майор' });
-        expect(res.statusCode).toBe(200);
-        expect(res.body.rank).toBe('Майор');
+      expect(res.statusCode).toBe(200);
+      expect(res.body.rank).toBe('Майор');
+    });
+  });
+
+  describe('Delete', () => {
+    // Должен удалить сотрудника
+    test('should delete employee', async () => {
+      const res = await request(app).delete(`/api/admin/employees/${employeeData.badgeNumber}`);
+      expect(res.statusCode).toBe(204);
     });
 
-    test('DELETE /api/admin/employees/:badgeNumber — should delete employee', async () => {
-        const res = await request(app).delete(`/api/admin/employees/${employeeData.badgeNumber}`);
-        expect(res.statusCode).toBe(204);
-    });
-
-    test('GET after delete — should return 404', async () => {
-        const res = await request(app)
+    // Должен вернуть 404 после удаления
+    test('should return 404 after delete', async () => {
+      const res = await request(app)
         .get('/api/admin/employees/search')
         .query({ badgeNumber: employeeData.badgeNumber });
-        expect(res.statusCode).toBe(404);
+      expect(res.statusCode).toBe(404);
     });
+  });
+
+  describe('Filters & Pagination', () => {
+    // Должен отфильтровать сотрудников по званию
+    test('should filter by rank', async () => {
+      const res = await request(app).get('/api/admin/employees').query({ rank: 'Майор' });
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data.every(e => e.rank.includes('Майор'))).toBe(true);
+    });
+
+    // Должен вернуть вторую страницу с лимитом 2 записи
+    test('should paginate results', async () => {
+      const res = await request(app).get('/api/admin/employees').query({ limit: 2, page: 2 });
+      expect(res.statusCode).toBe(200);
+      expect(res.body.data.length).toBeLessThanOrEqual(2);
+      expect(res.body.currentPage).toBe(2);
+    });
+
+    // Должен отсортировать по фамилии по убыванию
+    test('should sort by lastName desc', async () => {
+      const res = await request(app)
+        .get('/api/admin/employees')
+        .query({ sortField: 'lastName', sortOrder: 'desc' });
+
+      expect(res.statusCode).toBe(200);
+      const names = res.body.data.map(e => e.lastName);
+      const sorted = [...names].sort().reverse();
+      expect(names).toEqual(sorted);
+    });
+  });
+
+  describe('Validation & Errors', () => {
+    // Должен отклонить неверный формат номера значка
+    test('should reject invalid badgeNumber', async () => {
+      const res = await request(app).post('/api/admin/employees').send({
+        ...employeeData,
+        badgeNumber: '123456'
+      });
+      expect(res.statusCode).toBe(400);
+    });
+
+    // Должен вернуть ошибку конфликта при дублировании номера значка
+    test('should not allow duplicate badgeNumber', async () => {
+      await request(app).post('/api/admin/employees').send(employeeData); 
+      const res = await request(app).post('/api/admin/employees').send(employeeData); 
+      expect(res.statusCode).toBe(409);
+    });
+
+    // Должен вернуть 404 при обновлении несуществующего сотрудника
+    test('should return 404 when updating non-existent employee', async () => {
+      const res = await request(app)
+        .put('/api/admin/employees/00-0000')
+        .send(updatedData);
+      expect(res.statusCode).toBe(404);
+    });
+  });
 });
