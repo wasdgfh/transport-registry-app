@@ -1,11 +1,11 @@
 const Router = require('express');
 const router = new Router();
-const userRouter = require('./userRouter');
+const authRouter = require('./authRouter');
 const ownerRouter = require('./ownerRouter');
 const employeeRouter = require('./employeeRouter');
 const adminRouter = require('./adminRouter');
 
-router.use('/user', userRouter);
+router.use('/auth', authRouter);
 router.use('/owner', ownerRouter);
 router.use('/employee', employeeRouter);
 router.use('/admin', adminRouter);

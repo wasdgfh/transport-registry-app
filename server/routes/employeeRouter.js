@@ -6,18 +6,20 @@ const regOpController = require('../controllers/employee/regOpController');
 const workController = require('../controllers/employee/workController');
 const vehicleController = require('../controllers/employee/vehicleController');
 
+router.get('/natural-persons', ownerController.getAllNaturalPersons);
+router.get('/natural-persons/:passport', ownerController.getNaturalPersonByPassport);
+router.put('/natural-persons/:passport', ownerController.updateNaturalPerson);
+router.patch('/natural-persons/:passport', ownerController.patchNaturalPerson);
 
-router.get('/natural-person/:passport', ownerController.getNaturalPersonByPassport);
-router.put('/natural-person/:passport', ownerController.updateNaturalPerson);
-router.patch('/natural-person/:passport', ownerController.patchNaturalPerson);
-router.get('/legal-entities/:tax', ownerController.getLegalEntitiesByTax);
-router.put('/legal-entities/:tax', ownerController.updateLegalEntity);
-router.patch('/legal-entities/:tax', ownerController.patchLegalEntity);
+router.get('/legal-entities', ownerController.getAllLegalEntities);
+router.get('/legal-entities/:taxNumber', ownerController.getLegalEntitiesByTax);
+router.put('/legal-entities/:taxNumber', ownerController.updateLegalEntity);
+router.patch('/legal-entities/:taxNumber', ownerController.patchLegalEntity);
 
 router.get('/reg-docs', regDocCrudController.getAllRegDoc);
-router.get('/reg-docs/:regNumber', regDocCrudController.getRegDocById);
+router.get('/reg-docs/:reg_number', regDocCrudController.getRegDocById);
 router.post('/reg-docs', regDocCrudController.createRegDoc);
-router.put('/reg-docs/:regNumber', regDocCrudController.updateRegDoc);
+router.put('/reg-docs/:reg_number', regDocCrudController.updateRegDoc);
 
 router.get('/reg-op', regOpController.getAllRegOp);
 router.get('/reg-op/:id', regOpController.getRegOpById);
