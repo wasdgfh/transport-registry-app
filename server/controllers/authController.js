@@ -1,9 +1,8 @@
-const { Owner, NaturalPerson, LegalEntity } = require('../models/associations');
+const { Owner, NaturalPerson, LegalEntity, RegistrationDoc } = require('../models/associations');
 const ApiError = require('../error/ApiError');
 const Joi = require('joi');
 const sequelize = require('../db');
 
-// Схема для создания физического лица
 const naturalPersonSchema = Joi.object({
     isNaturalPerson: Joi.boolean().required(),
     passportData: Joi.string().pattern(/^\d{4} \d{6}$/).required()
@@ -14,7 +13,6 @@ const naturalPersonSchema = Joi.object({
     patronymic: Joi.string().pattern(/^[А-Яа-яЁё\s\-]+$/).min(2).max(50).required()
 });
 
-// Схема для создания юридического лица
 const legalEntitySchema = Joi.object({
     isNaturalPerson: Joi.boolean().required(),
     taxNumber: Joi.string().pattern(/^\d{10}$/).required()
@@ -32,7 +30,6 @@ class UserController {
 
             const { passportData, address, lastName, firstName, patronymic } = value;
 
-            // Проверяем, существует ли уже физическое лицо с таким паспортом
             const existingPerson = await NaturalPerson.findOne({
                 where: { passportData },
                 transaction
@@ -41,13 +38,11 @@ class UserController {
                 throw ApiError.conflict('Natural person with this passport already exists');
             }
 
-            // Создаем или находим запись в таблице Owner
             let owner = await Owner.findOne({ where: { address }, transaction });
             if (!owner) {
                 owner = await Owner.create({ address }, { transaction });
             }
 
-            // Создаем запись физического лица
             const naturalPerson = await NaturalPerson.create({
                 passportData,
                 address,
@@ -73,7 +68,6 @@ class UserController {
 
             const { taxNumber, address, companyName } = value;
 
-            // Проверяем, существует ли уже юридическое лицо с таким ИНН
             const existingEntity = await LegalEntity.findOne({
                 where: { taxNumber },
                 transaction
@@ -82,13 +76,11 @@ class UserController {
                 throw ApiError.conflict('Legal entity with this tax number already exists');
             }
 
-            // Создаем или находим запись в таблице Owner
             let owner = await Owner.findOne({ where: { address }, transaction });
             if (!owner) {
                 owner = await Owner.create({ address }, { transaction });
             }
 
-            // Создаем запись юридического лица
             const legalEntity = await LegalEntity.create({
                 taxNumber,
                 address,
@@ -137,10 +129,8 @@ class UserController {
 
             const address = person.address;
 
-            // Удаляем запись физического лица
             await person.destroy({ transaction });
 
-            // Проверяем, есть ли еще записи с этим адресом
             const linkedNaturalPersonCount = await NaturalPerson.count({ 
                 where: { address }, 
                 transaction 
@@ -154,7 +144,6 @@ class UserController {
                 transaction 
             });
 
-            // Если больше нет связанных записей, удаляем запись из Owner
             if (linkedNaturalPersonCount === 0 && linkedLegalEntityCount === 0 && linkedRegDocsCount === 0) {
                 await Owner.destroy({ 
                     where: { address }, 
@@ -191,10 +180,8 @@ class UserController {
 
             const address = entity.address;
 
-            // Удаляем запись юридического лица
             await entity.destroy({ transaction });
 
-            // Проверяем, есть ли еще записи с этим адресом
             const linkedNaturalPersonCount = await NaturalPerson.count({ 
                 where: { address }, 
                 transaction 
@@ -208,7 +195,6 @@ class UserController {
                 transaction 
             });
 
-            // Если больше нет связанных записей, удаляем запись из Owner
             if (linkedNaturalPersonCount === 0 && linkedLegalEntityCount === 0 && linkedRegDocsCount === 0) {
                 await Owner.destroy({ 
                     where: { address }, 
