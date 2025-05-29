@@ -1,15 +1,14 @@
 const Router = require('express');
 const router = new Router();
-const userController = require('../controllers/userController');
+const authController = require('../controllers/authController');
 
-router.post('/registration', userController.registration);
-router.post('/login', userController.login);
-router.get('/check', userController.check);
+router.post('/registration', authController.registration);
+router.post('/login', authController.login);
+router.get('/check', authController.check);
 
-
-router.post('/register/natural-person', userController.createNaturalPerson);
-router.post('/register/legal-entity', userController.createLegalEntity);
-router.delete('/natural-persons/:passportData', userController.deleteNaturalPerson);
-router.delete('/legal-entities/:taxNumber', userController.deleteLegalEntity);
+router.post('/register/natural-person', authController.createNaturalPerson);
+router.post('/register/legal-entity', authController.createLegalEntity);
+router.delete('/natural-persons/:passportData', authController.deleteNaturalPerson);
+router.delete('/legal-entities/:taxNumber', authController.deleteLegalEntity);
 
 module.exports = router;
