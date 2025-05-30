@@ -43,13 +43,6 @@ const regOpSchema = Joi.object({
             'date.base': 'Неверный формат даты',
             'date.format': 'Дата должна быть в формате ISO',
             'any.required': 'Дата операции обязательна'
-        }),
-    badgeNumber: Joi.string()
-        .length(6)
-        .required()
-        .messages({
-            'string.length': 'Номер жетона должен состоять из 6 символов',
-            'any.required': 'Номер жетона обязателен'
         })
 });
 
