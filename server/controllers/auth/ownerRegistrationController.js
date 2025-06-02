@@ -1,27 +1,9 @@
-const { Owner, NaturalPerson, LegalEntity, RegistrationDoc } = require('../models/associations');
-const ApiError = require('../error/ApiError');
-const Joi = require('joi');
-const sequelize = require('../db');
+const { Owner, NaturalPerson, LegalEntity, RegistrationDoc } = require('../../models/associations');
+const ApiError = require('../../error/ApiError');
+const sequelize = require('../../db');
+const { naturalPersonSchema, legalEntitySchema } = require('../../validations/ownerShema');
 
-const naturalPersonSchema = Joi.object({
-    isNaturalPerson: Joi.boolean().required(),
-    passportData: Joi.string().pattern(/^\d{4} \d{6}$/).required()
-        .messages({ 'string.pattern.base': 'passportData must match format "1234 567890"' }),
-    address: Joi.string().min(8).max(255).required(),
-    lastName: Joi.string().pattern(/^[А-Яа-яЁё\s\-]+$/).min(2).max(50).required(),
-    firstName: Joi.string().pattern(/^[А-Яа-яЁё\s\-]+$/).min(2).max(50).required(),
-    patronymic: Joi.string().pattern(/^[А-Яа-яЁё\s\-]+$/).min(2).max(50).required()
-});
-
-const legalEntitySchema = Joi.object({
-    isNaturalPerson: Joi.boolean().required(),
-    taxNumber: Joi.string().pattern(/^\d{10}$/).required()
-        .messages({ 'string.pattern.base': 'taxNumber must contain exactly 10 digits' }),
-    address: Joi.string().min(8).max(255).required(),
-    companyName: Joi.string().min(3).max(100).required()
-});
-
-class UserController {
+class OwnerRegistrationController {
     async createNaturalPerson(req, res, next) {
         const transaction = await sequelize.transaction();
         try {
@@ -94,19 +76,6 @@ class UserController {
             console.error('CREATE LEGAL ENTITY ERROR:', e);
             next(e);
         }
-    }
-
-    async registration(req, res){
-
-    }
-
-    async login(req, res){
-
-
-    }
-
-    async check(req, res, next){
-
     }
 
     async deleteNaturalPerson(req, res, next) {
@@ -212,4 +181,4 @@ class UserController {
     }
 }
 
-module.exports = new UserController();
+module.exports = new OwnerRegistrationController();
