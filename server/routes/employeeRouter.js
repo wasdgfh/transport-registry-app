@@ -29,7 +29,7 @@ router.patch('/reg-op/:id', regOpController.patchRegOp);
 
 router.get('/work', authMiddleware, workController.getAllWork);
 router.post('/work', authMiddleware, workController.createWork);
-router.put('/work/:id', authMiddleware, workController.patchWork);
+router.patch('/work/:id', authMiddleware, workController.patchWork);
 
 router.get('/vehicles', vehicleController.getAllTransportVehicle);
 router.get('/vehicles/:vin', vehicleController.getTransportVehicleByVin);
