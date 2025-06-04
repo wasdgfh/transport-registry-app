@@ -5,6 +5,7 @@ const ownerController = require('../controllers/employee/ownerController');
 const regOpController = require('../controllers/employee/regOpController');
 const workController = require('../controllers/employee/workController');
 const vehicleController = require('../controllers/employee/vehicleController');
+const authMiddleware = require('../middleware/authMiddleware');
 
 router.get('/natural-persons', ownerController.getAllNaturalPersons);
 router.get('/natural-persons/:passport', ownerController.getNaturalPersonByPassport);
@@ -26,9 +27,9 @@ router.get('/reg-op', regOpController.getAllRegOp);
 router.get('/reg-op/:vin', regOpController.getRegOpByVin);
 router.patch('/reg-op/:id', regOpController.patchRegOp);
 
-router.get('/work', workController.getAllWork);
-router.post('/work', workController.createWork);
-router.put('/work/:id', workController.updateWork);
+router.get('/work', authMiddleware, workController.getAllWork);
+router.post('/work', authMiddleware, workController.createWork);
+router.put('/work/:id', authMiddleware, workController.patchWork);
 
 router.get('/vehicles', vehicleController.getAllTransportVehicle);
 router.get('/vehicles/:vin', vehicleController.getTransportVehicleByVin);
