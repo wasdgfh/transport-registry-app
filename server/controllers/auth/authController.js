@@ -2,32 +2,12 @@ const { User, Employee, NaturalPerson, LegalEntity } = require('../../models/ass
 const ApiError = require('../../error/ApiError');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const Joi = require('joi');
 const sequelize = require('../../db');
+const { ownerRegistrationSchema, employeeRegistrationSchema } = require('../../validations/authShema');
 
 const SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS) || 10;
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.SECRET_KEY || 'secret-key';
 
-const ownerRegistrationSchema = Joi.object({
-    email: Joi.string().email().required(),
-    password: Joi.string().min(6).required(),
-    role: Joi.string().valid('OWNER').required(),
-    passportData: Joi.string().when('isNaturalPerson', {
-        is: true,
-        then: Joi.required(),
-        otherwise: Joi.forbidden()
-    }),
-    taxNumber: Joi.string().when('isNaturalPerson', {
-        is: false,
-        then: Joi.required(),
-        otherwise: Joi.forbidden()
-    }),
-    isNaturalPerson: Joi.boolean().required()
-});
-
-const employeeRegistrationSchema = Joi.object({
-    badgeNumber: Joi.string().required()
-});
 
 function generateRandomString(length) {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
