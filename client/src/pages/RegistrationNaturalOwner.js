@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import http from '../http';
 import {
@@ -12,8 +12,10 @@ import {
   Link
 } from "@mui/material";
 import { LOGIN_ROUTE, REGISTER_LEGAL_ROUTE } from "../utils/consts";
+import { Context } from '../index';
 
 export default function RegisterNaturalOwner() {
+  const { user } = useContext(Context);
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -23,11 +25,16 @@ export default function RegisterNaturalOwner() {
     lastName: "",
     firstName: "",
     patronymic: ""
-  });
-  
+  });  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user.isAuth) {
+      navigate('/');
+    }
+  }, [user.isAuth]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -194,6 +201,11 @@ export default function RegisterNaturalOwner() {
         <Typography align="center">
           Вы юридическое лицо?{' '}
           <Link href={REGISTER_LEGAL_ROUTE}>Зарегистрироваться как юр. лицо</Link>
+        </Typography>
+
+        <Typography align="center">
+          Уже зарегистрированы?{' '}
+          <Link href={LOGIN_ROUTE}>Войти</Link>
         </Typography>
       </Box>
     </Container>

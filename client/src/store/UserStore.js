@@ -1,7 +1,7 @@
 import { makeAutoObservable } from 'mobx';
 import axios from 'axios'; 
 import { jwtDecode } from 'jwt-decode';
-import { ADMIN_ROUTE, LOGIN_ROUTE } from '../utils/consts';
+import http from '../http';
 
 export default class UserStore { 
   constructor() {
@@ -44,13 +44,10 @@ export default class UserStore {
       const token = localStorage.getItem('token');
       if (!token) return;
       
-      const response = await axios.get('/api/auth/check', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
+      const response = await http.get('/auth/check');      
       localStorage.setItem('token', response.data.token);
       this.setIsAuth(true);
-      this.setUser(jwtDecode(response.data.token));
+      this.setUser(response.data.user);
     } catch (e) {
       localStorage.removeItem('token');
       console.error(e);

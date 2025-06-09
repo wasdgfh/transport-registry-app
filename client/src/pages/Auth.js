@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
   Container, 
@@ -26,6 +26,12 @@ function Auth() {
   const { user } = useContext(Context);
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    if (user.isAuth) {
+      navigate('/');
+    }
+  }, [user.isAuth]);
 
   const handleLogin = async (e) => {
     e.preventDefault();

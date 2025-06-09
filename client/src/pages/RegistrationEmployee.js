@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Container,
@@ -7,22 +7,32 @@ import {
   Typography,
   Box,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Link
 } from "@mui/material";
-import axios from "axios";
+import http from '../http';
+import { LOGIN_ROUTE } from "../utils/consts";
+import { Context } from "../index";
 
 function RegisterEmployee() {
+  const { user } = useContext(Context);
   const [badgeNumber, setBadgeNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (user.isAuth) {
+      navigate('/');
+    }
+  }, [user.isAuth]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!badgeNumber || !/^\d{2}-\d{4}$/.test(badgeNumber)) {
-      setError('Неверный формат номера бейджа (XX-XXXX)');
+      setError('Неверный формат номера значка (XX-XXXX)');
       return;
     }
 
@@ -30,7 +40,7 @@ function RegisterEmployee() {
     setError(null);
 
     try {
-      await axios.post("/api/auth/register/employee", { badgeNumber });
+      await http.post("/auth/register/employee", { badgeNumber });
       setSuccess(true);
     } catch (e) {
       console.error("Registration error:", e);
@@ -48,7 +58,7 @@ function RegisterEmployee() {
             Регистрация успешна!
           </Typography>
           <Typography>
-            Сотрудник с номером бейджа {badgeNumber} зарегистрирован.
+            Сотрудник с номером значка {badgeNumber} зарегистрирован.
             Пожалуйста, обратитесь к руководителю для получения учетных данных.
           </Typography>
           <Button 
@@ -77,7 +87,7 @@ function RegisterEmployee() {
         {error && <Alert severity="error">{error}</Alert>}
 
         <TextField
-          label="Номер бейджа (XX-XXXX)"
+          label="Номер значка (XX-XXXX)"
           value={badgeNumber}
           onChange={(e) => setBadgeNumber(e.target.value)}
           fullWidth
@@ -93,6 +103,13 @@ function RegisterEmployee() {
         >
           {loading ? <CircularProgress size={24} /> : 'Зарегистрировать'}
         </Button>
+
+        <Typography align="center">
+          Уже зарегистрированы?{' '}
+          <Link href={LOGIN_ROUTE}>
+            Войти
+          </Link>
+        </Typography>
       </Box>
     </Container>
   );

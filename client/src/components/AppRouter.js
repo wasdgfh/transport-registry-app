@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { authRoutes, publicRoutes } from '../routes';
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { Context } from '../index';
 import { observer } from 'mobx-react-lite';
 import Home from '../pages/Home';
@@ -8,6 +8,12 @@ import Home from '../pages/Home';
 function AppRouter() {
   const { user } = useContext(Context);
   
+  useEffect(() => {
+    if (localStorage.getItem('token')) {
+      user.checkAuth();
+    }
+  }, [user]);
+
   return (
     <Routes>
       {user.isAuth && authRoutes.map(({ path, Component }) => (
