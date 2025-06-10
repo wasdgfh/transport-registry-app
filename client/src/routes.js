@@ -5,6 +5,7 @@ import RegisterEmployee from './pages/RegistrationEmployee';
 import NotFound from './pages/NotFound';
 import DepartmentPage from './pages/Admin/DepartmentPage';
 import ProfilePage from './pages/ProfilePage';
+import ForbiddenPage from './pages/ForbiddenPage';
 import { 
   LOGIN_ROUTE, 
   REGISTER_NATURAL_ROUTE,
@@ -17,11 +18,13 @@ import {
 export const authRoutes = [
   {
     path: DEPARTMENTS_ROUTE,
-    Component: DepartmentPage
+    Component: DepartmentPage,
+    roles: ['ADMIN'] 
   },
   {
     path: PROFILE_ROUTE,
-    Component: ProfilePage
+    Component: ProfilePage,
+    roles: ['ADMIN', 'EMPLOYEE', 'OWNER']
   }
 ];
 
@@ -41,6 +44,10 @@ export const publicRoutes = [
   {
     path: REGISTRATION_EMPLOYEE_ROUTE,
     Component: RegisterEmployee
+  },
+  {
+    path: '/403',
+    Component: ForbiddenPage
   },
   {
     path: '*',
