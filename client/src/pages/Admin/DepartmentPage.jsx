@@ -5,7 +5,7 @@ import {
 } from '@mui/material';
 import { Add, Delete, Edit } from '@mui/icons-material';
 import DepartmentFormDialog from '../../components/Admin/RegistrationDepart/DepartmentFormDialog';
-import ConfirmDeleteDialog from '../../components/Admin/RegistrationDepart/ConfirmDeleteDialog';
+import ConfirmDeleteDialog from '../../components/Common/ConfirmDeleteDialog';
 import {
   fetchDepartments,
   createDepartment,
@@ -132,7 +132,7 @@ function DepartmentPage() {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Код</TableCell>
+              <TableCell>Код подразделения</TableCell>
               <TableCell
                 sx={{ cursor: 'pointer' }}
                 onClick={() => {
