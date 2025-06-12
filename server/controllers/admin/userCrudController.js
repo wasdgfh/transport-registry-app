@@ -33,7 +33,12 @@ class UserCrudController {
 
             const where = {};
             if (search) {
-                where.email = { [Op.like]: `%${search}%` };
+                where[Op.or] = [
+                    { email: { [Op.like]: `%${search}%` } },
+                    { passportData: { [Op.like]: `%${search}%` } },
+                    { taxNumber: { [Op.like]: `%${search}%` } },
+                    { badgeNumber: { [Op.like]: `%${search}%` } },
+                ];
             }
             if (role) {
                 where.role = role;

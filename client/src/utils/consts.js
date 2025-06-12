@@ -7,4 +7,4 @@ export const HOME_ROUTE = '/';
 export const DEPARTMENTS_ROUTE = '/admin/departments';
 export const EMPLOYEES_ROUTE = '/admin/employees';
 export const PROFILE_ROUTE = '/profile';
-
+export const USERS_ROUTE = '/admin/users';

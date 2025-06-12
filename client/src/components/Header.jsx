@@ -23,6 +23,7 @@ const Header = observer(() => {
           <Box>
             <Button color="inherit" onClick={() => navigate('/admin/employees')}>Сотрудники</Button>
             <Button color="inherit" onClick={() => navigate('/admin/departments')}>Отделы</Button>
+            <Button color="inherit" onClick={() => navigate('/admin/users')}>Пользователи</Button>
           </Box>
         )}
         {user.isAuth && (

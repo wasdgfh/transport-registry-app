@@ -7,6 +7,7 @@ import DepartmentPage from './pages/Admin/DepartmentPage';
 import ProfilePage from './pages/ProfilePage';
 import ForbiddenPage from './pages/Error/ForbiddenPage';
 import EmployeePage from './pages/Admin/EmployeePage';
+import UserPage from './pages/Admin/UserPage';
 import { 
   LOGIN_ROUTE, 
   REGISTER_NATURAL_ROUTE,
@@ -14,10 +15,16 @@ import {
   REGISTRATION_EMPLOYEE_ROUTE,
   DEPARTMENTS_ROUTE,
   PROFILE_ROUTE,
-  EMPLOYEES_ROUTE
+  EMPLOYEES_ROUTE,
+  USERS_ROUTE
 } from "./utils/consts";
 
 export const authRoutes = [
+  {
+    path: USERS_ROUTE,
+    Component: UserPage,
+    roles: ['ADMIN']
+  },
   {
     path: DEPARTMENTS_ROUTE,
     Component: DepartmentPage,
