@@ -9,6 +9,7 @@ import ForbiddenPage from './pages/Error/ForbiddenPage';
 import EmployeePage from './pages/Admin/EmployeePage';
 import UserPage from './pages/Admin/UserPage';
 import OwnerPage from './pages/Employee/OwnerPage';
+import RegDocPage from './pages/Employee/RegDocPage';
 import { 
   LOGIN_ROUTE, 
   REGISTER_NATURAL_ROUTE,
@@ -18,13 +19,19 @@ import {
   PROFILE_ROUTE,
   EMPLOYEES_ROUTE,
   USERS_ROUTE,
-  OWNER_ROUTE
+  OWNER_ROUTE,
+  REGDOC_ROUTE
 } from "./utils/consts";
 
 export const authRoutes = [
   {
     path: OWNER_ROUTE,
     Component: OwnerPage,
+    roles: ['EMPLOYEE']
+  },
+  {
+    path: REGDOC_ROUTE,
+    Component: RegDocPage,
     roles: ['EMPLOYEE']
   },
   {

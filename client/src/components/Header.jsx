@@ -15,13 +15,31 @@ const Header = observer(() => {
 
   return (
     <AppBar position="static" color="default" sx={{ mb: 3 }}>
-      <Toolbar>
-        <Typography variant="h6" sx={{ flexGrow: 1, cursor: 'pointer' }} onClick={() => navigate('/')}>
-          Transport Registry
-        </Typography>
+      <Toolbar sx={{ display: 'flex', alignItems: 'center' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            cursor: 'pointer',
+            flexGrow: 1
+          }}
+          onClick={() => navigate('/')}
+        >
+          <Box
+            component="img"
+            src="../images/logo.png" 
+            alt="logo"
+            sx={{ height: 32, width: 32, mr: 1 }}
+          />
+          <Typography variant="h5" noWrap>
+            ИС учета транспортных средств
+          </Typography>
+        </Box>
+
         {user.isAuth && user.user.role === 'EMPLOYEE' && (
           <Box>
             <Button color="inherit" onClick={() => navigate('/employee/owners')}>Владельцы</Button>
+            <Button color="inherit" onClick={() => navigate('/employee/reg-document')}>Регистрационные документы</Button>
           </Box>
         )}
         {user.isAuth && user.user.role === 'ADMIN' && (

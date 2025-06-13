@@ -11,10 +11,12 @@ class RegDocCrudController {
             const { error } = Joi.object({
                 limit: Joi.number().integer().min(1).max(100).default(10),
                 page: Joi.number().integer().min(1).default(1),
-                search: Joi.string().optional(),
+                search: Joi.string().allow('').optional(),
                 documentOwner: Joi.string().optional(),
                 startDate: Joi.date().iso().optional(),
-                endDate: Joi.date().iso().optional()
+                endDate: Joi.date().iso().optional(),
+                sortBy: Joi.string().valid('registrationNumber', 'registrationDate', 'address', 'pts', 'sts', 'documentOwner').optional(),
+                sortOrder: Joi.string().valid('ASC', 'DESC').optional()
             }).validate(req.query);
 
             if (error) throw ApiError.badRequest(error.details[0].message);
@@ -30,7 +32,9 @@ class RegDocCrudController {
                 where[Op.or] = [
                     { pts: { [Op.iLike]: `%${search}%` }},
                     { sts: { [Op.iLike]: `%${search}%` }},
-                    { address: { [Op.iLike]: `%${search}%` }}
+                    { address: { [Op.iLike]: `%${search}%` }},
+                    { registrationNumber: { [Op.iLike]: `%${search}%` }},
+                    { documentOwner: { [Op.iLike]: `%${search}%` }}
                 ];
             }
 
@@ -60,7 +64,7 @@ class RegDocCrudController {
                         attributes: ['address']
                     }
                 ],
-                order: [['registrationDate', 'DESC']]
+                order: [[req.query.sortBy || 'registrationDate', req.query.sortOrder || 'DESC']]
             });
 
             const docsWithOwner = await Promise.all(rows.map(async (doc) => {
