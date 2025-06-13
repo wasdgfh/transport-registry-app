@@ -15,6 +15,20 @@ const initialForm = {
   documentOwner: ''
 };
 
+const rusLetters = ['А','В','Е','К','М','Н','О','Р','С','Т','У','Х'];
+const generateNumber = () => {
+  const randLetter = () => rusLetters[Math.floor(Math.random() * rusLetters.length)];
+  return `${randLetter()}${Math.floor(100 + Math.random() * 900)}${randLetter()}${randLetter()}`; // без последних цифр
+};
+const generatePTS = () => {
+  const randLetter = () => rusLetters[Math.floor(Math.random() * rusLetters.length)];
+  return `${Math.floor(10 + Math.random() * 90)} ${randLetter()}${randLetter()} ${Math.floor(100000 + Math.random() * 900000)}`;
+};
+const generateSTS = () => {
+  const rand2Digit = () => Math.floor(10 + Math.random() * 90);
+  return `${rand2Digit()} ${rand2Digit()} ${Math.floor(100000 + Math.random() * 900000)}`;
+};
+
 function RegDocFormDialog({ open, onClose, onSubmit, editingData }) {
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
@@ -160,6 +174,28 @@ function RegDocFormDialog({ open, onClose, onSubmit, editingData }) {
               }
             }}
           />
+          {!editingData && (
+          <Button
+              variant="outlined"
+              onClick={() => setForm(prev => ({ ...prev, registrationNumber: generateNumber() }))}
+            >
+              Сгенерировать гос. номер
+            </Button>
+          )}
+
+          <Button
+            variant="outlined"
+            onClick={() => setForm(prev => ({ ...prev, pts: generatePTS() }))}
+          >
+            Сгенерировать ПТС
+          </Button>
+
+          <Button
+            variant="outlined"
+            onClick={() => setForm(prev => ({ ...prev, sts: generateSTS() }))}
+          >
+            Сгенерировать СТС
+          </Button>
           <Autocomplete
             freeSolo
             loading={loadingOwners}

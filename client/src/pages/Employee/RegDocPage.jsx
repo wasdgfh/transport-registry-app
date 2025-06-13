@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import {
-  Container, Typography, Button, Box, Snackbar, TextField, Pagination,
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton
+  Container, Typography, Button, Box, Snackbar, TextField, 
+  Pagination, FormControl, InputLabel, Select, MenuItem 
 } from '@mui/material';
 import { Add, Edit } from '@mui/icons-material';
 import RegDocFormDialog from '../../components/Employee/RegDoc/RegDocFormDialog';
+import RegDocTable from '../../components/Employee/RegDoc/RegDocTable';
 import { getRegDocs, postRegDoc, putRegDoc, patchRegDoc } from '../../components/Employee/RegDoc/RegDocService';
 
 function RegDocPage() {
@@ -14,6 +15,7 @@ function RegDocPage() {
   const [editData, setEditData] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
   const [editingCell, setEditingCell] = useState(null);
+  const [limit, setLimit] = useState(10);
 
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -24,7 +26,7 @@ function RegDocPage() {
   const loadDocs = async () => {
     setLoading(true);
     try {
-      const params = { page, limit: 10, sortBy: sortField, sortOrder };
+      const params = { page, limit, sortBy: sortField, sortOrder };
       if (search.trim()) params.search = search.trim();
 
       const res = await getRegDocs(params);
@@ -40,7 +42,7 @@ function RegDocPage() {
 
   useEffect(() => {
     loadDocs();
-  }, [page, search, sortField, sortOrder]);
+  }, [page, search, sortField, sortOrder, limit]);
 
   const showSnackbar = (message, severity = 'info') => {
     setSnackbar({ open: true, message, severity });
@@ -126,72 +128,39 @@ function RegDocPage() {
         sx={{ mb: 2 }}
       />
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ cursor: 'pointer' }} onClick={() => handleSort('registrationNumber')}>
-                Рег. номер {sortField === 'registrationNumber' ? (sortOrder === 'ASC' ? '↑' : '↓') : ''}
-              </TableCell>
-              <TableCell sx={{ cursor: 'pointer' }} onClick={() => handleSort('address')}>
-                Адрес {sortField === 'address' ? (sortOrder === 'ASC' ? '↑' : '↓') : ''}
-              </TableCell>
-              <TableCell sx={{ cursor: 'pointer' }} onClick={() => handleSort('pts')}>
-                ПТС {sortField === 'pts' ? (sortOrder === 'ASC' ? '↑' : '↓') : ''}
-              </TableCell>
-              <TableCell sx={{ cursor: 'pointer' }} onClick={() => handleSort('sts')}>
-                СТС {sortField === 'sts' ? (sortOrder === 'ASC' ? '↑' : '↓') : ''}
-              </TableCell>
-              <TableCell sx={{ cursor: 'pointer' }} onClick={() => handleSort('registrationDate')}>
-                Дата рег. {sortField === 'registrationDate' ? (sortOrder === 'ASC' ? '↑' : '↓') : ''}
-              </TableCell>
-              <TableCell sx={{ cursor: 'pointer' }} onClick={() => handleSort('documentOwner')}>
-                Владелец {sortField === 'documentOwner' ? (sortOrder === 'ASC' ? '↑' : '↓') : ''}
-              </TableCell>
-              <TableCell align="right">Действия</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {docs.map(doc => (
-              <TableRow key={doc.registrationNumber}>
-                {['registrationNumber', 'address', 'pts', 'sts', 'registrationDate', 'documentOwner'].map(field => (
-                  <TableCell
-                    key={field}
-                    onDoubleClick={() => field !== 'registrationNumber' && setEditingCell({ id: doc.registrationNumber, field, value: doc[field] })}
-                  >
-                    {editingCell?.id === doc.registrationNumber && editingCell?.field === field ? (
-                      <TextField
-                        size="small"
-                        autoFocus
-                        value={editingCell.value}
-                        onChange={(e) => setEditingCell({ ...editingCell, value: e.target.value })}
-                        onBlur={() => handlePatch(doc.registrationNumber, field, editingCell.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handlePatch(doc.registrationNumber, field, editingCell.value);
-                        }}
-                      />
-                    ) : (
-                      field === 'registrationDate'
-                        ? new Date(doc[field]).toISOString().split('T')[0].split('-').reverse().join('.')
-                        : doc[field]
-                    )}
-                  </TableCell>
-                ))}
-                <TableCell align="right">
-                  <IconButton onClick={() => handleEdit(doc)}><Edit /></IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-            {docs.length === 0 && !loading && (
-              <TableRow>
-                <TableCell colSpan={7} align="center">Нет данных</TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <RegDocTable
+        data={docs}
+        loading={loading}
+        sortField={sortField}
+        sortOrder={sortOrder}
+        onSort={handleSort}
+        onEditClick={handleEdit}
+        editingCell={editingCell}
+        setEditingCell={setEditingCell}
+        handleKeyDown={(e, id, field, value) => {
+          if (e.key === 'Enter') handlePatch(id, field, value);
+        }}
+        handleBlur={(id, field, value) => handlePatch(id, field, value)}
+      />
 
-      <Box display="flex" justifyContent="center" mt={2}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
+        <FormControl sx={{ minWidth: 120 }}>
+          <InputLabel id="limit-select-label">Показывать по</InputLabel>
+          <Select
+            labelId="limit-select-label"
+            value={limit}
+            label="Показывать по"
+            onChange={(e) => {
+              setLimit(Number(e.target.value));
+              setPage(1);
+            }}
+          >
+            {[5, 10, 20, 50].map((option) => (
+              <MenuItem key={option} value={option}>{option}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
         <Pagination count={totalPages} page={page} onChange={(_, value) => setPage(value)} />
       </Box>
 

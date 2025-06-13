@@ -11,14 +11,13 @@ function RegDocTable({
   sortOrder,
   onSort,
   onEditClick,
-  onDoubleClickEdit,
   editingCell,
   setEditingCell,
   handleKeyDown,
   handleBlur
 }) {
   const columns = [
-    { label: 'Рег. номер', field: 'registrationNumber' },
+    { label: 'Гос. рег. номер', field: 'registrationNumber' },
     { label: 'Адрес', field: 'address' },
     { label: 'ПТС', field: 'pts' },
     { label: 'СТС', field: 'sts' },
@@ -42,71 +41,61 @@ function RegDocTable({
         <TableHead>
           <TableRow>
             {columns.map(col => renderHeaderCell(col.label, col.field))}
-            <TableCell align="right" key="actions-header">Действия</TableCell>
+            <TableCell align="right">Действия</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
-            {loading ? (
-                <TableRow key="loading">
-                <TableCell colSpan={columns.length + 1} align="center">Загрузка...</TableCell>
-                </TableRow>
-            ) : data.length > 0 ? (
-                data.map((item, index) => {
-                const id = item.registrationNumber;
-                const rowKey = id || index;
-
-                return (
-                    <TableRow key={`row-${rowKey}`}>
-                    {columns.map(col => {
-                        return (
-                        <TableCell
-                            key={`cell-${rowKey}-${col.field}`}
-                            onDoubleClick={() => {
-                            if (col.field === 'registrationNumber') return;
-                            onDoubleClickEdit(id, col.field, item[col.field]);
-                            }}
-                        >
-                            {editingCell?.id === id && editingCell?.field === col.field ? (
-                            <TextField
-                                size="small"
-                                autoFocus
-                                value={editingCell.value}
-                                onChange={(e) =>
-                                setEditingCell({ ...editingCell, value: e.target.value })
-                                }
-                                onBlur={() =>
-                                handleBlur(id, col.field, editingCell.value)
-                                }
-                                onKeyDown={(e) =>
-                                handleKeyDown(e, id, col.field, editingCell.value)
-                                }
-                            />
-                            ) : (
-                            col.field === 'registrationDate'
-                                ? new Date(item[col.field])
-                                    .toISOString()
-                                    .split('T')[0]
-                                    .split('-')
-                                    .reverse()
-                                    .join('.')
-                                : item[col.field]
-                            )}
-                        </TableCell>
-                        );
-                    })}
-                    <TableCell align="right" key={`actions-${rowKey}`}>
-                        <IconButton onClick={() => onEditClick(item)}>
-                        <Edit />
-                        </IconButton>
+          {loading ? (
+            <TableRow>
+              <TableCell colSpan={columns.length + 1} align="center">Загрузка...</TableCell>
+            </TableRow>
+          ) : data.length > 0 ? (
+            data.map((item, index) => {
+              const id = item.registrationNumber;
+              const rowKey = id || index;
+              return (
+                <TableRow key={`row-${rowKey}`}>
+                  {columns.map(col => (
+                    <TableCell
+                      key={`cell-${rowKey}-${col.field}`}
+                      onDoubleClick={() =>
+                        !['registrationNumber', 'address', 'documentOwner'].includes(col.field) &&
+                        setEditingCell({ id, field: col.field, value: item[col.field] })
+                      }
+                    >
+                      {editingCell?.id === id && editingCell?.field === col.field ? (
+                        <TextField
+                          size="small"
+                          autoFocus
+                          value={editingCell.value}
+                          onChange={(e) =>
+                            setEditingCell({ ...editingCell, value: e.target.value })
+                          }
+                          onBlur={() => handleBlur(id, col.field, editingCell.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleKeyDown(e, id, col.field, editingCell.value);
+                          }}
+                        />
+                      ) : (
+                        col.field === 'registrationDate'
+                          ? new Date(item[col.field]).toISOString().split('T')[0].split('-').reverse().join('.')
+                          : item[col.field]
+                      )}
                     </TableCell>
-                    </TableRow>
-                );
-                })
-            ) : (
-                <TableRow key="no-data">
-                <TableCell colSpan={columns.length + 1} align="center">Нет данных</TableCell>
+                  ))}
+                  <TableCell align="right">
+                    <IconButton onClick={() => onEditClick(item)}>
+                      <Edit />
+                    </IconButton>
+                  </TableCell>
                 </TableRow>
-            )}
+              );
+            })
+          ) : (
+            <TableRow>
+              <TableCell colSpan={columns.length + 1} align="center">Нет данных</TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
     </TableContainer>
