@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
-  Container, Typography, Button, Box, Snackbar, TextField, Pagination
+  Container, Typography, Button, Box, Snackbar, TextField, Pagination,
+  FormControl, InputLabel, Select, MenuItem
 } from '@mui/material';
 import { Add } from '@mui/icons-material';
 
@@ -27,6 +28,7 @@ function EmployeePage() {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
   const [filter, setFilter] = useState('');
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
 
   const [sortField, setSortField] = useState('lastName');
@@ -37,7 +39,7 @@ function EmployeePage() {
     try {
       const params = {
         page,
-        limit: 10,
+        limit,
         sortField,
         sortOrder,
       };
@@ -57,7 +59,7 @@ function EmployeePage() {
 
   useEffect(() => {
     loadEmployees();
-  }, [page, filter, sortField, sortOrder]);
+  }, [page, filter, sortField, sortOrder, limit]);
 
   const showSnackbar = (message, severity = 'info') => {
     setSnackbar({ open: true, message, severity });
@@ -154,7 +156,24 @@ function EmployeePage() {
         onSort={handleSort}
       />
 
-      <Box display="flex" justifyContent="center" mt={2}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
+        <FormControl sx={{ minWidth: 120 }}>
+          <InputLabel id="limit-select-label">Показывать по</InputLabel>
+          <Select
+            labelId="limit-select-label"
+            value={limit}
+            label="Показывать по"
+            onChange={(e) => {
+              setLimit(Number(e.target.value));
+              setPage(1);
+            }}
+          >
+            {[5, 10, 20, 50].map(n => (
+              <MenuItem key={n} value={n}>{n}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        
         <Pagination count={totalPages} page={page} onChange={(_, value) => setPage(value)} />
       </Box>
 
