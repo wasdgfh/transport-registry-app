@@ -18,7 +18,7 @@ const vehicleCreateSchema = Joi.object({
         }),
     hasChassisNumber: Joi.boolean().default(false),
     bodyColor: Joi.string().min(2).max(50).required(),
-    transmissionType: Joi.string().valid('MT', 'AT', 'AMT', 'CVT', 'DCT').required(),
+    transmissionType: Joi.string().valid('MT', 'AT', 'AMT', 'CVT', 'DCT', 'DSG').required(),
     steeringWheel: Joi.string().valid('Правостороннее', 'Левостороннее').required(),
     engineModel: Joi.string().pattern(/^[A-Z0-9-]+$/).required()
         .messages({
@@ -45,7 +45,7 @@ const vehicleUpdateSchema = Joi.object({
         }),
     hasChassisNumber: Joi.boolean(),
     bodyColor: Joi.string().min(2).max(50).required(),
-    transmissionType: Joi.string().valid('MT', 'AT', 'AMT', 'CVT', 'DCT').required(),
+    transmissionType: Joi.string().valid('MT', 'AT', 'AMT', 'CVT', 'DCT', 'DSG').required(),
     steeringWheel: Joi.string().valid('Правостороннее', 'Левостороннее').required(),
     engineModel: Joi.string().pattern(/^[A-Z0-9-]+$/).required()
         .messages({
@@ -72,7 +72,7 @@ const vehiclePatchSchema = Joi.object({
         }),
     hasChassisNumber: Joi.boolean(),
     bodyColor: Joi.string().min(2).max(50),
-    transmissionType: Joi.string().valid('MT', 'AT', 'AMT', 'CVT', 'DCT'),
+    transmissionType: Joi.string().valid('MT', 'AT', 'AMT', 'CVT', 'DCT', 'DSG'),
     steeringWheel: Joi.string().valid('Правостороннее', 'Левостороннее'),
     engineModel: Joi.string().pattern(/^[A-Z0-9-]+$/)
         .messages({

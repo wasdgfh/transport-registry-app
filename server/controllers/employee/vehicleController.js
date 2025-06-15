@@ -8,61 +8,72 @@ const { vehicleUpdateSchema, vehiclePatchSchema } = require('../../validations/v
 class TransportVehicleController {
     async getAllTransportVehicle(req, res, next) {
         try {
-            const { error, value } = Joi.object({
-                page: Joi.number().integer().min(1).default(1),
-                limit: Joi.number().integer().min(1).max(100).default(10),
-                sortBy: Joi.string().valid('createdAt', 'releaseYear', 'makeAndModel', 'engineVolume').default('createdAt'),
-                sortOrder: Joi.string().valid('ASC', 'DESC').default('DESC'),
-                vin: Joi.string().pattern(/^[A-HJ-NPR-Z0-9]{17}$/).optional(),
-                makeAndModel: Joi.string().min(2).max(100).optional(),
-                releaseYear: Joi.string().pattern(/^(19|20)\d{2}$/).optional(),
-                manufacture: Joi.string().min(2).max(100).optional(),
-                typeOfDrive: Joi.string().valid('FWD', 'RWD', 'AWD', '4WD').optional(),
-                bodyColor: Joi.string().min(2).max(50).optional(),
-                transmissionType: Joi.string().valid('MT', 'AT', 'AMT', 'CVT', 'DCT').optional(),
-                steeringWheel: Joi.string().valid('Правостороннее', 'Левостороннее').optional(),
-                engineModel: Joi.string().pattern(/^[A-Z0-9-]+$/).optional(),
-                engineVolumeFrom: Joi.number().integer().min(500).max(7400).optional(),
-                engineVolumeTo: Joi.number().integer().min(500).max(7400).optional()
-            }).validate(req.query);
+            const {
+                page = 1,
+                limit = 10,
+                sortBy = 'createdAt',
+                sortOrder = 'DESC',
+                search = ''
+            } = req.query;
 
-            if (error) throw ApiError.badRequest(error.details[0].message);
+            const allowedSortFields = [
+                'vin',
+                'makeAndModel',
+                'releaseYear',
+                'manufacture',
+                'typeOfDrive',
+                'power',
+                'chassisNumber',
+                'bodyNumber',
+                'bodyColor',
+                'transmissionType',
+                'steeringWheel',
+                'engineModel',
+                'engineVolume',
+                'createdAt',
+                'updatedAt'
+            ];
 
-            const where = {};
-            if (value.vin) where.vin = value.vin;
-            if (value.makeAndModel) where.makeAndModel = { [Op.iLike]: `%${value.makeAndModel}%` };
-            if (value.releaseYear) where.releaseYear = value.releaseYear;
-            if (value.manufacture) where.manufacture = { [Op.iLike]: `%${value.manufacture}%` };
-            if (value.typeOfDrive) where.typeOfDrive = value.typeOfDrive;
-            if (value.bodyColor) where.bodyColor = { [Op.iLike]: `%${value.bodyColor}%` };
-            if (value.transmissionType) where.transmissionType = value.transmissionType;
-            if (value.steeringWheel) where.steeringWheel = value.steeringWheel;
-            if (value.engineModel) where.engineModel = { [Op.iLike]: `%${value.engineModel}%` };
-            if (value.engineVolumeFrom || value.engineVolumeTo) {
-                where.engineVolume = {};
-                if (value.engineVolumeFrom) where.engineVolume[Op.gte] = value.engineVolumeFrom;
-                if (value.engineVolumeTo) where.engineVolume[Op.lte] = value.engineVolumeTo;
+            if (!allowedSortFields.includes(sortBy)) {
+                throw ApiError.badRequest('Invalid sort field');
             }
 
-            const offset = (value.page - 1) * value.limit;
+            if (!['ASC', 'DESC'].includes(sortOrder.toUpperCase())) {
+                throw ApiError.badRequest('Invalid sort order');
+            }
+
+            const offset = (page - 1) * limit;
+
+            const where = {};
+            if (search) {
+                where[Op.or] = [
+                    { makeAndModel: { [Op.iLike]: `%${search}%` } },
+                    { vin: { [Op.iLike]: `%${search}%` } }
+                ];
+            }
+
+            const order = sortBy === 'power'
+                ? sequelize.literal(`CAST(REGEXP_REPLACE(SPLIT_PART(power, '/', 2), '\\D', '', 'g') AS INTEGER) ${sortOrder}`)
+                : [[sortBy, sortOrder.toUpperCase()]];
+                
             const { count, rows } = await TransportVehicle.findAndCountAll({
                 where,
-                limit: value.limit,
-                offset,
-                order: [[value.sortBy, value.sortOrder]]
+                limit: parseInt(limit),
+                offset: parseInt(offset),
+                order
             });
 
             res.json({
                 data: rows,
                 pagination: {
                     total: count,
-                    page: value.page,
-                    limit: value.limit,
-                    totalPages: Math.ceil(count / value.limit)
+                    page: parseInt(page),
+                    limit: parseInt(limit),
+                    totalPages: Math.ceil(count / limit)
                 }
             });
         } catch (e) {
-            console.error("GET ALL VEHICLES ERROR:", e);            
+            console.error("GET ALL VEHICLES ERROR:", e);
             next(e);
         }
     }

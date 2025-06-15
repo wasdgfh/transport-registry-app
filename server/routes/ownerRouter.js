@@ -16,7 +16,7 @@ router.post('/reg-op', authMiddleware, roleMiddleware(['OWNER']), regOpControlle
 
 router.get('/vehicles', authMiddleware, roleMiddleware(['OWNER']), vehicleController.getMyVehicles);
 router.get('/vehicles/:vin/', authMiddleware, roleMiddleware(['OWNER']), vehicleController.getMyVehicleByVin);
-router.post('/vehicles', authMiddleware, roleMiddleware(['OWNER']), vehicleController.createVehicle);
+router.post('/vehicles', authMiddleware, roleMiddleware(['EMPLOYEE', 'OWNER']), vehicleController.createVehicle);
 
 router.get('/depart-info', authMiddleware, roleMiddleware(['OWNER']), regDepartController.getRegDepart);
 

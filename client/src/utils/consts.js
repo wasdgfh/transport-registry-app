@@ -12,3 +12,4 @@ export const USERS_ROUTE = '/admin/users';
 
 export const OWNER_ROUTE = '/employee/owners';
 export const REGDOC_ROUTE = '/employee/reg-document';
+export const VEHICLES_ROUTE = '/employee/vehicles';
