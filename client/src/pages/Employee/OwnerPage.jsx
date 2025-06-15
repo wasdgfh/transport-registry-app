@@ -1,6 +1,7 @@
 import {
   Container, Typography, Tabs, Tab, Box,
-  TextField, Pagination, Snackbar
+  TextField, Pagination, Snackbar,
+  FormControl, InputLabel, Select, MenuItem
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 
@@ -21,6 +22,7 @@ function OwnerPage() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState('');
   const [sortOrder, setSortOrder] = useState('ASC');
@@ -38,14 +40,14 @@ function OwnerPage() {
 
   useEffect(() => {
     fetchData();
-  }, [page, sortOrder, search, type]);
+  }, [page, sortOrder, search, type, limit]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
       const params = {
         page,
-        limit: 10,
+        limit,
         sortBy: sortField,
         sortOrder,
         search
@@ -55,7 +57,7 @@ function OwnerPage() {
         : await getLegalEntities(params);
 
       setData(res.data.data);
-      setTotalPages(Math.ceil(res.data.total / 10));
+      setTotalPages(Math.ceil(res.data.total / limit));
     } catch (e) {
       console.error('Ошибка загрузки:', e);
       showSnackbar('Ошибка загрузки данных', 'error');
@@ -137,7 +139,24 @@ function OwnerPage() {
         showSnackbar={showSnackbar}
       />
 
-      <Box mt={2} display="flex" justifyContent="center">
+      <Box mt={2} display="flex" justifyContent="space-between" alignItems="center">
+        <FormControl sx={{ minWidth: 120 }}>
+          <InputLabel id="limit-label">Показывать по</InputLabel>
+          <Select
+            labelId="limit-label"
+            value={limit}
+            label="Показывать по"
+            onChange={(e) => {
+              setLimit(Number(e.target.value));
+              setPage(1);
+            }}
+          >
+            {[5, 10, 20, 50].map(n => (
+              <MenuItem key={n} value={n}>{n}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        
         <Pagination
           count={totalPages}
           page={page}
