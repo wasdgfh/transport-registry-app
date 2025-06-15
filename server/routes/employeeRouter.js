@@ -8,12 +8,12 @@ const vehicleController = require('../controllers/employee/vehicleController');
 const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
 
-router.get('/natural-persons', authMiddleware, roleMiddleware(['EMPLOYEE']), ownerController.getAllNaturalPersons);
+router.get('/natural-persons', authMiddleware, roleMiddleware(['EMPLOYEE', 'ADMIN']), ownerController.getAllNaturalPersons);
 router.get('/natural-persons/:passport', authMiddleware, roleMiddleware(['EMPLOYEE', 'OWNER']), ownerController.getNaturalPersonByPassport);
 router.put('/natural-persons/:passport', authMiddleware, roleMiddleware(['EMPLOYEE']), ownerController.updateNaturalPerson);
 router.patch('/natural-persons/:passport', authMiddleware, roleMiddleware(['EMPLOYEE']), ownerController.patchNaturalPerson);
 
-router.get('/legal-entities', authMiddleware, roleMiddleware(['EMPLOYEE']), ownerController.getAllLegalEntities);
+router.get('/legal-entities', authMiddleware, roleMiddleware(['EMPLOYEE', 'ADMIN']), ownerController.getAllLegalEntities);
 router.get('/legal-entities/:taxNumber', authMiddleware, roleMiddleware(['EMPLOYEE', 'OWNER']), ownerController.getLegalEntitiesByTax);
 router.put('/legal-entities/:taxNumber', authMiddleware, roleMiddleware(['EMPLOYEE']), ownerController.updateLegalEntity);
 router.patch('/legal-entities/:taxNumber', authMiddleware, roleMiddleware(['EMPLOYEE']), ownerController.patchLegalEntity);
