@@ -15,6 +15,9 @@ import EditRegNumberDialog from '../../components/Employee/RegistrationOp/EditRe
 import RegistrationOpTable from '../../components/Employee/RegistrationOp/RegistrationOpTable';
 import RegistrationOpFormDialog from '../../components/Employee/RegistrationOp/RegistrationOpFormDialog';
 
+import { postEmployeeWork } from '../../components/Employee/Work/WorkService';
+import WorkFormDialog from '../../components/Employee/Work/WorkFormDialog';
+
 function RegistrationOpPage() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -32,6 +35,9 @@ function RegistrationOpPage() {
 
   const [dialogOpenId, setDialogOpenId] = useState(null);
   const [dialogRegNumber, setDialogRegNumber] = useState('');
+
+  const [openWorkDialog, setOpenWorkDialog] = useState(false);
+  const [workOperationId, setWorkOperationId] = useState(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -128,8 +134,24 @@ function RegistrationOpPage() {
     }
   };
 
+  const handleCreateWork = (operationId) => {
+    setWorkOperationId(operationId);
+    setOpenWorkDialog(true);
+  };
+
+  const handleSubmitWork = async (operationId, formData) => {
+    try {
+      await postEmployeeWork({ ...formData, operationId });
+      showSnackbar('Работа добавлена', 'success');
+      setOpenWorkDialog(false);
+    } catch (e) {
+      console.error(e);
+      showSnackbar('Ошибка добавления', 'error');
+    }
+  };
+
   return (
-    <Container maxWidth="lg">
+    <Container maxWidth="xl">
       <Box sx={{ my: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h4">Регистрационные операции</Typography>
         <Button variant="contained" startIcon={<Add />} onClick={handleCreate}>
@@ -163,6 +185,7 @@ function RegistrationOpPage() {
         fetchData={fetchData}
         showSnackbar={showSnackbar}
         handleOpenDialog={handleOpenDialog}
+        handleCreateWork={handleCreateWork}
       />
 
       <EditRegNumberDialog
@@ -200,6 +223,13 @@ function RegistrationOpPage() {
         onClose={() => setOpenForm(false)}
         onSubmit={handleSubmit}
         editingData={editData}
+      />
+
+      <WorkFormDialog
+        open={openWorkDialog}
+        onClose={() => setOpenWorkDialog(false)}
+        onSubmit={handleSubmitWork}
+        operationId={workOperationId}
       />
 
       <Snackbar

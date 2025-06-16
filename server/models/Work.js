@@ -16,6 +16,10 @@ const Work = sequelize.define('work', {
     purpose: {
         type: DataTypes.STRING,
         allowNull: false
+    },
+    workDate: {
+        type: DataTypes.DATE,
+        allowNull: false
     }
 }, {
     tableName: 'work'

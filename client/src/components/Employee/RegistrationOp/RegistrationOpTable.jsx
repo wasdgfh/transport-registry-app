@@ -2,13 +2,13 @@ import {
   Table, TableHead, TableRow, TableCell, TableBody,
   Paper, TableContainer, TextField, IconButton
 } from '@mui/material';
-import { Edit } from '@mui/icons-material';
+import { Edit, Work as WorkIcon } from '@mui/icons-material';
 import { useState } from 'react';
 
 function RegistrationOpTable({
   data, loading, sortField, sortOrder, onSort,
   editingCell, setEditingCell, patchOp, fetchData,
-  showSnackbar, handleOpenDialog
+  showSnackbar, handleOpenDialog, handleCreateWork
 }) {
   const [editValue, setEditValue] = useState('');
 
@@ -126,6 +126,9 @@ function RegistrationOpTable({
                 <TableCell align="right">
                   <IconButton onClick={() => handleOpenDialog(row.operationId)}>
                     <Edit />
+                  </IconButton>
+                  <IconButton onClick={() => handleCreateWork(row.operationId)}>
+                    <WorkIcon />
                   </IconButton>
                 </TableCell>
               </TableRow>

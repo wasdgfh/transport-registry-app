@@ -10,7 +10,8 @@ class WorkController {
         try {
             const schema = Joi.object({
                 limit: Joi.number().integer().min(1).max(100).default(20),
-                page: Joi.number().integer().min(1).default(1)
+                page: Joi.number().integer().min(1).default(1),
+                search: Joi.string().allow('', null)
             });
 
             const { value, error } = schema.validate(req.query);
@@ -24,9 +25,17 @@ class WorkController {
             if (user.role !== 'EMPLOYEE') throw ApiError.forbidden('Only employees can view work records');
             const badgeNumber = user.badgeNumber;
             if (!badgeNumber) throw ApiError.forbidden('Employee badge number is missing');
+            
+            const whereClause = { badgeNumber };
+
+            if (value.search) {
+            whereClause['$registrationop.vin$'] = {
+                [Op.iLike]: `%${value.search}%`
+            };
+            }
 
             const { count, rows } = await Work.findAndCountAll({
-                where: { badgeNumber },
+                where: whereClause,
                 limit,
                 offset,
                 include: [
@@ -41,7 +50,7 @@ class WorkController {
                         required: true
                     }
                 ],
-                order: [[sequelize.col('registrationop.operationDate'), 'DESC']],        
+                order: [['workDate', 'DESC']],        
                 attributes: { exclude: ['createdAt', 'updatedAt'] }
             });
 
@@ -64,7 +73,7 @@ class WorkController {
             const { error } = workSchema.validate(req.body);
             if (error) throw ApiError.badRequest(error.details[0].message);
 
-            const { operationId, purpose } = req.body;
+            const { operationId, purpose, workDate } = req.body;
 
             const user = req.user;
             if (user.role !== 'EMPLOYEE') throw ApiError.forbidden('Only employees can create work records');
@@ -88,10 +97,9 @@ class WorkController {
             const newWork = await Work.create({
                 badgeNumber,
                 operationId,
-                purpose
-                }, 
-                { transaction }
-            );
+                purpose,
+                workDate
+            }, { transaction });
 
             await transaction.commit();
             res.status(201).json(newWork);
@@ -125,10 +133,10 @@ class WorkController {
             }
 
             await work.update(
-                { purpose: req.body.purpose },
+                req.body,
                 {
                     transaction,
-                    fields: ['purpose']
+                    fields: ['purpose', 'workDate']
                 }
             );
 
@@ -137,7 +145,7 @@ class WorkController {
         } catch (e) {
             await transaction.rollback();
             console.error('PATCH WORK ERROR:', e);
-            next(e.message);
+            next(e);
         }
     }
 }

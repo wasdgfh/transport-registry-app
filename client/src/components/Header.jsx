@@ -42,6 +42,7 @@ const Header = observer(() => {
             <Button color="inherit" onClick={() => navigate('/employee/reg-document')}>Регистрационные документы</Button>
             <Button color="inherit" onClick={() => navigate('/employee/vehicles')}>Транспортные средства</Button>
             <Button color="inherit" onClick={() => navigate('/employee/operations')}>Регистрационные операции</Button>
+            <Button color="inherit" onClick={() => navigate('/employee/works')}>Выполненные работы</Button>
           </Box>
         )}
         {user.isAuth && user.user.role === 'ADMIN' && (
