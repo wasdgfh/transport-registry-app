@@ -26,7 +26,7 @@ router.patch('/reg-docs/:regNumber', authMiddleware, roleMiddleware(['EMPLOYEE']
 
 router.get('/reg-op', authMiddleware, roleMiddleware(['EMPLOYEE']), regOpController.getAllRegOp);
 router.get('/reg-op/:vin', authMiddleware, roleMiddleware(['EMPLOYEE']), regOpController.getRegOpByVin);
-router.patch('/reg-op/:id', authMiddleware, roleMiddleware(['EMPLOYEE']), regOpController.patchRegOp);
+router.patch('/reg-op/:id', authMiddleware, roleMiddleware(['EMPLOYEE', 'OWNER']), regOpController.patchRegOp);
 
 router.get('/work', authMiddleware, roleMiddleware(['EMPLOYEE']), workController.getAllWork);
 router.post('/work', authMiddleware, roleMiddleware(['EMPLOYEE']), workController.createWork);

@@ -13,7 +13,7 @@ router.put('/employees/:badgeNumber', authMiddleware, roleMiddleware(['ADMIN']),
 router.patch('/employees/:badgeNumber', authMiddleware, roleMiddleware(['ADMIN']), employeeCrudController.patchEmployee);
 router.delete('/employees/:badgeNumber', authMiddleware, roleMiddleware(['ADMIN']), employeeCrudController.deleteEmployee);
 
-router.get('/reg-depart', authMiddleware, roleMiddleware(['ADMIN', 'EMPLOYEE']), regDepartCrudController.getAllRegDepart);
+router.get('/reg-depart', authMiddleware, roleMiddleware(['ADMIN', 'EMPLOYEE', 'OWNER']), regDepartCrudController.getAllRegDepart);
 router.get('/reg-depart/search', authMiddleware, roleMiddleware(['ADMIN']), regDepartCrudController.getRegDepartByField);
 router.post('/reg-depart', authMiddleware, roleMiddleware(['ADMIN']), regDepartCrudController.createRegDepart);
 router.put('/reg-depart/:unitCode', authMiddleware, roleMiddleware(['ADMIN']), regDepartCrudController.updateRegDepart);

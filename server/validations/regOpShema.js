@@ -49,7 +49,7 @@ const regOpSchema = Joi.object({
 const regOpPatchSchema = Joi.object({
     registrationNumber: Joi.string()
         .pattern(/^[АВЕКМНОРСТУХ]\d{3}[АВЕКМНОРСТУХ]{2}\d{2,3}$/)
-        .allow('')
+        .allow(null)
         .optional()
         .messages({
             'string.pattern.base': 'Неверный формат регистрационного номера'

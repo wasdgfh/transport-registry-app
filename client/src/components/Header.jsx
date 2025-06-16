@@ -35,7 +35,12 @@ const Header = observer(() => {
             ИС учета транспортных средств
           </Typography>
         </Box>
-
+        
+        {user.isAuth && user.user.role === 'OWNER' && (
+          <Box>
+            <Button color="inherit" onClick={() => navigate('/vehicles')}>Транспортные средства</Button>
+          </Box>
+        )}
         {user.isAuth && user.user.role === 'EMPLOYEE' && (
           <Box>
             <Button color="inherit" onClick={() => navigate('/employee/owners')}>Владельцы</Button>

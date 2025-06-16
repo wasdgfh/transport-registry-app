@@ -13,6 +13,7 @@ import RegDocPage from './pages/Employee/RegDocPage';
 import TransportVehiclePage from './pages/Employee/TransportVehiclePage';
 import RegistrationOpPage from './pages/Employee/RegistrationOpPage';
 import WorkPage from './pages/Employee/WorkPage';
+import RegistrationVehiclePage  from './pages/Owner/RegistrationVehiclePage';
 import { 
   LOGIN_ROUTE, 
   REGISTER_NATURAL_ROUTE,
@@ -26,10 +27,16 @@ import {
   REGDOC_ROUTE,
   VEHICLES_ROUTE,
   REG_OP_ROUTE,
-  WORK_ROUTE
+  WORK_ROUTE,
+  REG_VEHICLE_ROUTE
 } from "./utils/consts";
 
 export const authRoutes = [
+  {
+    path: REG_VEHICLE_ROUTE,
+    Component: RegistrationVehiclePage,
+    roles: ['OWNER']
+  },
   {
     path: WORK_ROUTE,
     Component: WorkPage,

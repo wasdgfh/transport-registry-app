@@ -9,8 +9,8 @@ class RegOpController {
     async getAllRegOp(req, res, next) {
         try {
             const { error } = Joi.object({
-                limit: Joi.number().integer().min(1).max(100).default(10),
-                page: Joi.number().integer().min(1).default(1)
+            limit: Joi.number().integer().min(1).max(100).default(10),
+            page: Joi.number().integer().min(1).default(1)
             }).validate(req.query);
 
             if (error) throw ApiError.badRequest(error.details[0].message);
@@ -24,43 +24,49 @@ class RegOpController {
             if (!documentOwner) throw ApiError.forbidden('Unable to determine the document owner');
 
             const docs = await RegistrationDoc.findAll({
-                where: { documentOwner },
-                attributes: ['registrationNumber']
+            where: { documentOwner },
+            attributes: ['registrationNumber']
             });
 
             const regNumbers = docs.map(doc => doc.registrationNumber).filter(Boolean);
-            if (!regNumbers.length) return res.json({ data: [], total: 0  });
+            if (!regNumbers.length) return res.json({ data: [], total: 0 });
 
             const { count, rows } = await RegistrationOp.findAndCountAll({
-                where: {
-                    registrationNumber: { [Op.in]: regNumbers }
+            where: {
+                registrationNumber: { [Op.in]: regNumbers }
+            },
+            include: [
+                {
+                model: TransportVehicle,
+                attributes: [
+                    'vin', 'makeAndModel', 'releaseYear',
+                    'chassisNumber', 'bodyNumber', 'manufacture',
+                    'typeOfDrive', 'power', 'bodyColor',
+                    'transmissionType', 'steeringWheel',
+                    'engineModel', 'engineVolume'
+                ]
                 },
-                include: [
-                    {
-                        model: TransportVehicle,
-                        attributes: ['vin', 'makeAndModel', 'releaseYear']
-                    },
-                    {
-                        model: RegistrationDoc,
-                        attributes: ['registrationNumber', 'registrationDate']
-                    }
-                ],
-                limit,
-                offset,
-                order: [['operationDate', 'DESC']]
+                {
+                model: RegistrationDoc,
+                attributes: ['registrationNumber', 'registrationDate']
+                }
+            ],
+            limit,
+            offset,
+            order: [['operationDate', 'DESC']]
             });
 
             res.json({
-                total: count,
-                pages: Math.ceil(count / limit),
-                currentPage: page,
-                data: rows
+            total: count,
+            pages: Math.ceil(count / limit),
+            currentPage: page,
+            data: rows
             });
         } catch (e) {
             console.error("GET ALL REGOP ERROR:", e);
             next(ApiError.internal(e.message));
         }
-    }
+        }
 
     async getRegOpByVin(req, res, next) {
         try {
