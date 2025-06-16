@@ -41,7 +41,7 @@ function RegistrationOpTable({
   const formatDate = (value) => {
     if (!value) return '-';
     const date = new Date(value);
-    return isNaN(date) ? value : date.toISOString().split('T')[0];
+    return isNaN(date) ? value : date.toLocaleDateString('ru-RU');
   };
 
   const renderCell = (row, col) => {

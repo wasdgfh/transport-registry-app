@@ -3,6 +3,7 @@ import {
   TableContainer, Paper, TextField, IconButton
 } from '@mui/material';
 import { Edit } from '@mui/icons-material';
+import { useState } from 'react';
 
 function RegDocTable({
   data,
@@ -16,6 +17,8 @@ function RegDocTable({
   handleKeyDown,
   handleBlur
 }) {
+  const [editValue, setEditValue] = useState('');
+
   const columns = [
     { label: 'Гос. рег. номер', field: 'registrationNumber' },
     { label: 'Адрес', field: 'address' },
@@ -24,6 +27,29 @@ function RegDocTable({
     { label: 'Дата рег.', field: 'registrationDate' },
     { label: 'Владелец', field: 'documentOwner' }
   ];
+
+  const handleDoubleClick = (id, field, value) => {
+    const isDate = field === 'registrationDate';
+    const cleanedValue = isDate
+      ? value
+        ? new Date(value).toISOString().split('T')[0]
+        : new Date().toISOString().split('T')[0]
+      : value;
+
+    setEditingCell({ id, field });
+    setEditValue(cleanedValue);
+  };
+
+  const handleSave = (id, field) => {
+    handleBlur(id, field, editValue);
+    setEditingCell(null);
+  };
+
+  const formatDate = (value) => {
+    if (!value) return '-';
+    const date = new Date(value);
+    return isNaN(date) ? value : date.toLocaleDateString('ru-RU');
+  };
 
   const renderHeaderCell = (label, fieldKey) => (
     <TableCell
@@ -34,6 +60,55 @@ function RegDocTable({
       {label} {sortField === fieldKey ? (sortOrder === 'ASC' ? '↑' : '↓') : ''}
     </TableCell>
   );
+
+  const renderCell = (item, col) => {
+    const id = item.registrationNumber;
+    const isEditing = editingCell?.id === id && editingCell?.field === col.field;
+
+    if (col.field === 'registrationDate') {
+      return isEditing ? (
+        <TextField
+          type="date"
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onBlur={() => handleSave(id, col.field)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSave(id, col.field)}
+          autoFocus
+          size="small"
+          variant="standard"
+        />
+      ) : (
+        <span
+          onDoubleClick={() => handleDoubleClick(id, col.field, item[col.field])}
+          style={{ cursor: 'pointer' }}
+        >
+          {formatDate(item[col.field])}
+        </span>
+      );
+    }
+
+    return isEditing ? (
+      <TextField
+        value={editValue}
+        onChange={(e) => setEditValue(e.target.value)}
+        onBlur={() => handleSave(id, col.field)}
+        onKeyDown={(e) => e.key === 'Enter' && handleSave(id, col.field)}
+        autoFocus
+        size="small"
+        variant="standard"
+      />
+    ) : (
+      <span
+        onDoubleClick={() =>
+          !['registrationNumber', 'address', 'documentOwner'].includes(col.field) &&
+          handleDoubleClick(id, col.field, item[col.field])
+        }
+        style={{ cursor: ['pts', 'sts'].includes(col.field) ? 'pointer' : 'default' }}
+      >
+        {item[col.field] || '-'}
+      </span>
+    );
+  };
 
   return (
     <TableContainer component={Paper}>
@@ -56,31 +131,8 @@ function RegDocTable({
               return (
                 <TableRow key={`row-${rowKey}`}>
                   {columns.map(col => (
-                    <TableCell
-                      key={`cell-${rowKey}-${col.field}`}
-                      onDoubleClick={() =>
-                        !['registrationNumber', 'address', 'documentOwner'].includes(col.field) &&
-                        setEditingCell({ id, field: col.field, value: item[col.field] })
-                      }
-                    >
-                      {editingCell?.id === id && editingCell?.field === col.field ? (
-                        <TextField
-                          size="small"
-                          autoFocus
-                          value={editingCell.value}
-                          onChange={(e) =>
-                            setEditingCell({ ...editingCell, value: e.target.value })
-                          }
-                          onBlur={() => handleBlur(id, col.field, editingCell.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleKeyDown(e, id, col.field, editingCell.value);
-                          }}
-                        />
-                      ) : (
-                        col.field === 'registrationDate'
-                          ? new Date(item[col.field]).toISOString().split('T')[0].split('-').reverse().join('.')
-                          : item[col.field]
-                      )}
+                    <TableCell key={`cell-${rowKey}-${col.field}`}>
+                      {renderCell(item, col)}
                     </TableCell>
                   ))}
                   <TableCell align="right">
