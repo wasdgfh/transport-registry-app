@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import {
   Container, Typography, Box, Snackbar, TextField,
-  Pagination, FormControl, InputLabel, Select, MenuItem
+  Pagination, FormControl, InputLabel, Select, MenuItem,
+  Button
 } from '@mui/material';
 import {
   getEmployeeWorks,
@@ -10,6 +11,8 @@ import {
 } from '../../components/Employee/Work/WorkService';
 import WorkFormDialog from '../../components/Employee/Work/WorkFormDialog';
 import WorkTable from '../../components/Employee/Work/WorkTable';
+import { Context } from '../../index';
+import * as XLSX from 'xlsx';
 
 function WorkPage() {
   const [works, setWorks] = useState([]);
@@ -24,6 +27,18 @@ function WorkPage() {
   const [search, setSearch] = useState('');
 
   const searchTimeout = useRef(null);
+
+  const today = new Date();
+  const lastMonth = new Date();
+  lastMonth.setMonth(today.getMonth() - 1);
+
+  const formatDateInput = (date) => date.toISOString().split('T')[0];
+
+  const [reportDateFrom, setReportDateFrom] = useState(formatDateInput(lastMonth));
+  const [reportDateTo, setReportDateTo] = useState(formatDateInput(today));
+
+  const { user } = useContext(Context);
+  const badgeNumber = user?.user?.badgeNumber || 'неизвестно';
 
   useEffect(() => {
     clearTimeout(searchTimeout.current);
@@ -80,10 +95,60 @@ function WorkPage() {
     }
   };
 
+  const getReportRows = () => {
+    const from = reportDateFrom ? new Date(reportDateFrom) : null;
+    const to = reportDateTo ? new Date(reportDateTo) : null;
+
+    return works.filter(w => {
+      const date = new Date(w.workDate);
+      return (!from || date >= from) && (!to || date <= to);
+    });
+  };
+
+  const exportToExcel = () => {
+    const data = getReportRows().map(w => ({
+      VIN: w.registrationop.vin,
+      'Тип операции': w.registrationop.operationType,
+      'Дата операции': new Date(w.registrationop.operationDate).toLocaleDateString('ru-RU'),
+      'Дата выполнения': new Date(w.workDate).toLocaleDateString('ru-RU'),
+      Назначение: w.purpose
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Работы');
+
+    const format = (str) => str.split('-').reverse().join('.');
+
+    const fileName = `Выполненные работы сотрудника ${badgeNumber} за период с ${format(reportDateFrom)} по ${format(reportDateTo)}.xlsx`;
+
+    XLSX.writeFile(wb, fileName);
+  };
+
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
         <Typography variant="h4">Выполненные работы</Typography>
+      </Box>
+
+      <Box display="flex" gap={2} mb={2}>
+        <TextField
+          type="date"
+          label="С"
+          InputLabelProps={{ shrink: true }}
+          value={reportDateFrom}
+          onChange={(e) => setReportDateFrom(e.target.value)}
+        />
+        <TextField
+          type="date"
+          label="По"
+          InputLabelProps={{ shrink: true }}
+          value={reportDateTo}
+          onChange={(e) => setReportDateTo(e.target.value)}
+        />
+        <Button variant="outlined" onClick={exportToExcel}>
+          Экспорт в Excel
+        </Button>
       </Box>
 
       <TextField
