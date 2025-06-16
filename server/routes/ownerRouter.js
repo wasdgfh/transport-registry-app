@@ -12,7 +12,7 @@ router.get('/reg-docs/:regNumber', authMiddleware, roleMiddleware(['OWNER']), re
 
 router.get('/reg-op', authMiddleware, roleMiddleware(['OWNER']), regOpController.getAllRegOp);
 router.get('/reg-op/:vin', authMiddleware, roleMiddleware(['OWNER']), regOpController.getRegOpByVin);
-router.post('/reg-op', authMiddleware, roleMiddleware(['OWNER']), regOpController.createRegOp);
+router.post('/reg-op', authMiddleware, roleMiddleware(['EMPLOYEE', 'OWNER']), regOpController.createRegOp);
 
 router.get('/vehicles', authMiddleware, roleMiddleware(['OWNER']), vehicleController.getMyVehicles);
 router.get('/vehicles/:vin/', authMiddleware, roleMiddleware(['OWNER']), vehicleController.getMyVehicleByVin);

@@ -11,12 +11,13 @@ class RegOpController {
             const { error } = Joi.object({
                 limit: Joi.number().integer().min(1).max(100).default(20),
                 page: Joi.number().integer().min(1).default(1),
-                vin: Joi.string().pattern(/^[A-HJ-NPR-Z0-9]{17}$/).optional(),
-                registrationNumber: Joi.string().pattern(/^[АВЕКМНОРСТУХ]\d{3}[АВЕКМНОРСТУХ]{2}\d{2,3}$/).optional(),
+                search: Joi.string().allow('').optional(),
                 unitCode: Joi.string().length(6).optional(),
                 operationType: Joi.string().valid('Постановка на учет', 'Снятие с учета', 'Внесение измененеий в регистрационные данные').optional(),
                 startDate: Joi.date().iso().optional(),
-                endDate: Joi.date().iso().optional()
+                endDate: Joi.date().iso().optional(),
+                sortField: Joi.string().valid('vin', 'registrationNumber', 'unitCode', 'operationType', 'operationBase', 'operationDate').optional(),
+                sortOrder: Joi.string().valid('ASC', 'DESC').optional()
             }).validate(req.query);
 
             if (error) {
@@ -28,8 +29,13 @@ class RegOpController {
             const offset = (page - 1) * limit;
 
             const where = {};
-            if (req.query.vin) where.vin = req.query.vin;
-            if (req.query.registrationNumber) where.registrationNumber = req.query.registrationNumber;
+            if (req.query.search) {
+                where[Op.or] = [
+                    { vin: { [Op.iLike]: `%${req.query.search}%` } },
+                    { registrationNumber: { [Op.iLike]: `%${req.query.search}%` } }
+                ];
+            }
+
             if (req.query.unitCode) where.unitCode = req.query.unitCode;
             if (req.query.operationType) where.operationType = req.query.operationType;
           
@@ -46,11 +52,14 @@ class RegOpController {
                 where.operationDate = { [Op.lte]: new Date(req.query.endDate + 'T23:59:59.999Z') };
             }
 
+            const sortField = req.query.sortField || 'operationDate';
+            const sortOrder = req.query.sortOrder || 'DESC';
+
             const { count, rows } = await RegistrationOp.findAndCountAll({
                 where,
                 limit,
                 offset,
-                order: [['operationDate', 'DESC']],
+                order: [[sortField, sortOrder]],
                 attributes: { exclude: ['createdAt', 'updatedAt'] }
             });
 
