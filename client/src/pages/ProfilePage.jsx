@@ -3,7 +3,6 @@ import { Context } from '../index';
 import { Container, Typography, Box, CircularProgress, Alert } from '@mui/material';
 import { observer } from 'mobx-react-lite';
 import http from '../http';
-import axios from 'axios';
 
 const ProfilePage = observer(() => {
   const { user } = useContext(Context);
@@ -62,7 +61,7 @@ const ProfilePage = observer(() => {
           {user.user.role === 'EMPLOYEE' && (
             <>
               <Typography>ФИО: {profileData.lastName} {profileData.firstName} {profileData.patronymic}</Typography>
-              <Typography>Номер жетона: {profileData.badgeNumber}</Typography>
+              <Typography>Номер значка: {profileData.badgeNumber}</Typography>
               <Typography>Код подразделения: {profileData.unitCode}</Typography>
               <Typography>Звание: {profileData.rank}</Typography>
             </>
