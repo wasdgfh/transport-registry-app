@@ -10,14 +10,14 @@ import Header from './components/Header';
 const theme = createTheme({
   palette: {
     mode: "light",
-    primary: {
-      main: "#1976d2",
-    },
-    secondary: {
-      main: "#dc004e",
-    },
-  },
+    primary: { main: "#1976d2" },
+    secondary: { main: "#dc004e" },
+    background: {
+      default: "#f7f9fc" 
+    }
+  }
 });
+
 
 function App() {
   const { user } = useContext(Context);

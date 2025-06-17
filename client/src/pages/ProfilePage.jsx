@@ -1,6 +1,8 @@
 import { useContext, useEffect, useState } from 'react';
 import { Context } from '../index';
-import { Container, Typography, Box, CircularProgress, Alert } from '@mui/material';
+import {
+  Container, Typography, Box, CircularProgress, Alert, Paper, Divider
+} from '@mui/material';
 import { observer } from 'mobx-react-lite';
 import http from '../http';
 
@@ -24,9 +26,7 @@ const ProfilePage = observer(() => {
         res = await http.get(`/admin/employees/search?badgeNumber=${user.user.badgeNumber}`);
       }
 
-      if (res?.data) {
-        setProfileData(res.data);
-      }
+      if (res?.data) setProfileData(res.data);
     } catch (err) {
       console.error(err);
       setError('Ошибка загрузки данных профиля');
@@ -40,12 +40,16 @@ const ProfilePage = observer(() => {
   }, []);
 
   return (
-    <Container sx={{ mt: 4 }}>
-      <Typography variant="h4" gutterBottom>
+    <Container maxWidth="md" sx={{ mt: 4, mb: 6 }}>
+      <Typography variant="h4" gutterBottom fontWeight={600}>
         Профиль пользователя
       </Typography>
 
-      <Typography>Email: {user.user.email}</Typography>
+      {error && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {error}
+        </Alert>
+      )}
 
       {user.user.role === 'ADMIN' && (
         <Alert severity="info" sx={{ mt: 2 }}>
@@ -53,36 +57,42 @@ const ProfilePage = observer(() => {
         </Alert>
       )}
 
-      {loading && <CircularProgress sx={{ mt: 2 }} />}
-      {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+      {loading ? (
+        <CircularProgress sx={{ mt: 4 }} />
+      ) : (
+        profileData && (
+          <Paper sx={{ mt: 3, p: 3, backgroundColor: '#fff' }} elevation={3}>
+            <Typography variant="subtitle1" gutterBottom>
+              <strong>Email:</strong> {user.user.email}
+            </Typography>
+            <Divider sx={{ my: 2 }} />
 
-      {!loading && profileData && (
-        <Box sx={{ mt: 3 }}>
-          {user.user.role === 'EMPLOYEE' && (
-            <>
-              <Typography>ФИО: {profileData.lastName} {profileData.firstName} {profileData.patronymic}</Typography>
-              <Typography>Номер значка: {profileData.badgeNumber}</Typography>
-              <Typography>Код подразделения: {profileData.unitCode}</Typography>
-              <Typography>Звание: {profileData.rank}</Typography>
-            </>
-          )}
+            {user.user.role === 'EMPLOYEE' && (
+              <>
+                <Typography><strong>ФИО:</strong> {profileData.lastName} {profileData.firstName} {profileData.patronymic}</Typography>
+                <Typography><strong>Номер значка:</strong> {profileData.badgeNumber}</Typography>
+                <Typography><strong>Код подразделения:</strong> {profileData.unitCode}</Typography>
+                <Typography><strong>Звание:</strong> {profileData.rank}</Typography>
+              </>
+            )}
 
-          {user.user.passportData && (
-            <>
-              <Typography>ФИО: {profileData.lastName} {profileData.firstName} {profileData.patronymic}</Typography>
-              <Typography>Паспортные данные: {profileData.passportData}</Typography>
-              <Typography>Адрес: {profileData.address}</Typography>
-            </>
-          )}
+            {user.user.passportData && (
+              <>
+                <Typography><strong>ФИО:</strong> {profileData.lastName} {profileData.firstName} {profileData.patronymic}</Typography>
+                <Typography><strong>Паспортные данные:</strong> {profileData.passportData}</Typography>
+                <Typography><strong>Адрес:</strong> {profileData.address}</Typography>
+              </>
+            )}
 
-          {user.user.taxNumber && (
-            <>
-              <Typography>Название компании: {profileData.companyName}</Typography>
-              <Typography>ИНН: {profileData.taxNumber}</Typography>
-              <Typography>Адрес: {profileData.address}</Typography>
-            </>
-          )}
-        </Box>
+            {user.user.taxNumber && (
+              <>
+                <Typography><strong>Название компании:</strong> {profileData.companyName}</Typography>
+                <Typography><strong>ИНН:</strong> {profileData.taxNumber}</Typography>
+                <Typography><strong>Адрес:</strong> {profileData.address}</Typography>
+              </>
+            )}
+          </Paper>
+        )
       )}
     </Container>
   );

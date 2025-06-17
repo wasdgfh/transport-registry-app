@@ -44,8 +44,8 @@ function Home() {
         alignItems="center"
         justifyContent="center"
         sx={{
-          backgroundColor: '#fff',
-          px: 4
+          px: 4,
+          background: 'transparent'
         }}
       >
         <Box
@@ -55,11 +55,11 @@ function Home() {
           sx={{
             maxHeight: '100vh',
             height: 'auto',
-            width: 'auto',
+            width: 'auto'
           }}
         />
       </Box>
-
+      
       <Box
         display="flex"
         flexDirection="column"
