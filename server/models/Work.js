@@ -15,7 +15,10 @@ const Work = sequelize.define('work', {
     },
     purpose: {
         type: DataTypes.STRING,
-        primaryKey: true,
+        allowNull: false
+    },
+    workDate: {
+        type: DataTypes.DATE,
         allowNull: false
     }
 }, {

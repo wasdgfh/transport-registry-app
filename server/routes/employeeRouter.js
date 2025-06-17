@@ -5,27 +5,36 @@ const ownerController = require('../controllers/employee/ownerController');
 const regOpController = require('../controllers/employee/regOpController');
 const workController = require('../controllers/employee/workController');
 const vehicleController = require('../controllers/employee/vehicleController');
+const authMiddleware = require('../middleware/authMiddleware');
+const roleMiddleware = require('../middleware/roleMiddleware');
 
-router.get('/reg-docs', regDocCrudController.getAllRegDoc);
-router.get('/reg-docs/:id', regDocCrudController.getRegDocById);
-router.post('/reg-docs', regDocCrudController.createRegDoc);
-router.put('/reg-docs/:id', regDocCrudController.updateRegDoc);
+router.get('/natural-persons', authMiddleware, roleMiddleware(['EMPLOYEE', 'ADMIN']), ownerController.getAllNaturalPersons);
+router.get('/natural-persons/:passport', authMiddleware, roleMiddleware(['EMPLOYEE', 'OWNER']), ownerController.getNaturalPersonByPassport);
+router.put('/natural-persons/:passport', authMiddleware, roleMiddleware(['EMPLOYEE']), ownerController.updateNaturalPerson);
+router.patch('/natural-persons/:passport', authMiddleware, roleMiddleware(['EMPLOYEE']), ownerController.patchNaturalPerson);
 
-router.get('/natural-person/:id', ownerController.getNaturalPersonById);
-router.put('/natural-person/:id', ownerController.updateNaturalPerson);
-router.get('/legal-entities/:id', ownerController.getLegalEntitiesById);
-router.put('/legal-entities/:id', ownerController.updateLegalEntities);
+router.get('/legal-entities', authMiddleware, roleMiddleware(['EMPLOYEE', 'ADMIN']), ownerController.getAllLegalEntities);
+router.get('/legal-entities/:taxNumber', authMiddleware, roleMiddleware(['EMPLOYEE', 'OWNER']), ownerController.getLegalEntitiesByTax);
+router.put('/legal-entities/:taxNumber', authMiddleware, roleMiddleware(['EMPLOYEE']), ownerController.updateLegalEntity);
+router.patch('/legal-entities/:taxNumber', authMiddleware, roleMiddleware(['EMPLOYEE']), ownerController.patchLegalEntity);
 
-router.get('/reg-op', regOpController.getAllRegOp);
-router.get('/reg-op/:id', regOpController.getRegOpById);
-router.put('/reg-op/:id', regOpController.updateRegOp);
+router.get('/reg-docs', authMiddleware, roleMiddleware(['EMPLOYEE']), regDocCrudController.getAllRegDoc);
+router.get('/reg-docs/:regNumber', authMiddleware, roleMiddleware(['EMPLOYEE']), regDocCrudController.getRegDocByRegNumber);
+router.post('/reg-docs', authMiddleware, roleMiddleware(['EMPLOYEE']), regDocCrudController.createRegDoc);
+router.put('/reg-docs/:regNumber', authMiddleware, roleMiddleware(['EMPLOYEE']), regDocCrudController.updateRegDoc);
+router.patch('/reg-docs/:regNumber', authMiddleware, roleMiddleware(['EMPLOYEE']), regDocCrudController.patchRegDoc);
 
-router.get('/work', workController.getAllWork);
-router.post('/work', workController.createWork);
-router.put('/work/:id', workController.updateWork);
+router.get('/reg-op', authMiddleware, roleMiddleware(['EMPLOYEE']), regOpController.getAllRegOp);
+router.get('/reg-op/:vin', authMiddleware, roleMiddleware(['EMPLOYEE']), regOpController.getRegOpByVin);
+router.patch('/reg-op/:id', authMiddleware, roleMiddleware(['EMPLOYEE', 'OWNER']), regOpController.patchRegOp);
 
-router.get('/vehicles', vehicleController.getAllTransportVehicle);
-router.get('/vehicles/:id', vehicleController.getTransportVehicleById);
-router.put('/vehicles/:id', vehicleController.updateTransportVehicle);
+router.get('/work', authMiddleware, roleMiddleware(['EMPLOYEE']), workController.getAllWork);
+router.post('/work', authMiddleware, roleMiddleware(['EMPLOYEE']), workController.createWork);
+router.patch('/work/:id', authMiddleware, roleMiddleware(['EMPLOYEE']), workController.patchWork);
+
+router.get('/vehicles', authMiddleware, roleMiddleware(['EMPLOYEE']), vehicleController.getAllTransportVehicle);
+router.get('/vehicles/:vin', authMiddleware, roleMiddleware(['EMPLOYEE']), vehicleController.getTransportVehicleByVin);
+router.put('/vehicles/:vin', authMiddleware, roleMiddleware(['EMPLOYEE']), vehicleController.updateTransportVehicle);
+router.patch('/vehicles/:vin', authMiddleware, roleMiddleware(['EMPLOYEE']), vehicleController.patchTransportVehicle);
 
 module.exports = router;
