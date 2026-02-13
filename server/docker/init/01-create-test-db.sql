@@ -1,0 +1,1 @@
+CREATE DATABASE vehicle_registration_test;

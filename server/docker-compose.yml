@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: vehicle_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 00000000
+      POSTGRES_DB: vehicle_registration
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    container_name: vehicle_app
+    env_file:
+      - .env
+    ports:
+      - "3001:3001"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: npm run dev
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+volumes:
+  pgdata:
