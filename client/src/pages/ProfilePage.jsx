@@ -14,21 +14,16 @@ const ProfilePage = observer(() => {
 
   const fetchProfileData = async () => {
     try {
-      let res = null;
-
-      if (user.user.role === 'OWNER') {
-        if (user.user.passportData) {
-          res = await http.get(`/employee/natural-persons/${user.user.passportData}`);
-        } else if (user.user.taxNumber) {
-          res = await http.get(`/employee/legal-entities/${user.user.taxNumber}`);
-        }
-      } else if (user.user.role === 'EMPLOYEE' && user.user.badgeNumber) {
-        res = await http.get(`/admin/employees/search?badgeNumber=${user.user.badgeNumber}`);
+      setError('');
+      const response = await http.get('/profile');
+      
+      if (response.data?.user) {
+        setProfileData(response.data.user);
+      } else {
+        throw new Error('Некорректный формат данных');
       }
-
-      if (res?.data) setProfileData(res.data);
     } catch (err) {
-      console.error(err);
+      console.error('Ошибка загрузки профиля:', err);
       setError('Ошибка загрузки данных профиля');
     } finally {
       setLoading(false);
@@ -36,8 +31,26 @@ const ProfilePage = observer(() => {
   };
 
   useEffect(() => {
-    fetchProfileData();
-  }, []);
+    if (user.user && Object.keys(user.user).length > 0) {
+      fetchProfileData();
+    } else {
+      const timeout = setTimeout(() => {
+        if (!user.user) {
+          setLoading(false);
+        }
+      }, 2000);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [user.user]);
+
+  if (!user.user) {
+    return (
+      <Container maxWidth="md" sx={{ mt: 4 }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="md" sx={{ mt: 4, mb: 6 }}>
@@ -51,51 +64,63 @@ const ProfilePage = observer(() => {
         </Alert>
       )}
 
-      {user.user.role === 'ADMIN' && (
-        <Alert severity="info" sx={{ mt: 2 }}>
-          Администратор ИС
-        </Alert>
-      )}
-
       {loading ? (
         <CircularProgress sx={{ mt: 4 }} />
       ) : (
-        profileData && (
-          <Paper sx={{ mt: 3, p: 3, backgroundColor: '#fff' }} elevation={3}>
-            <Typography variant="subtitle1" gutterBottom>
-              <strong>Email:</strong> {user.user.email}
-            </Typography>
-            <Divider sx={{ my: 2 }} />
+        <>
+          {/* Для админа показываем только alert */}
+          {user.user.role === 'ADMIN' && (
+            <Alert severity="info" sx={{ mt: 2 }}>
+              Администратор ИС
+            </Alert>
+          )}
 
-            {user.user.role === 'EMPLOYEE' && (
-              <>
-                <Typography><strong>ФИО:</strong> {profileData.lastName} {profileData.firstName} {profileData.patronymic}</Typography>
-                <Typography><strong>Номер значка:</strong> {profileData.badgeNumber}</Typography>
-                <Typography><strong>Код подразделения:</strong> {profileData.unitCode}</Typography>
-                <Typography><strong>Звание:</strong> {profileData.rank}</Typography>
-              </>
-            )}
+          {/* Для всех остальных ролей показываем Paper с данными */}
+          {user.user.role !== 'ADMIN' && profileData && (
+            <Paper sx={{ mt: 3, p: 3, backgroundColor: '#fff' }} elevation={3}>
+              <Typography variant="subtitle1" gutterBottom>
+                <strong>Email:</strong> {user.user.email}
+              </Typography>
+              <Divider sx={{ my: 2 }} />
+              
+              {profileData.role === 'EMPLOYEE' && (
+                <>
+                  <Typography><strong>ФИО:</strong> {profileData.lastName} {profileData.firstName} {profileData.patronymic}</Typography>
+                  <Typography><strong>Номер значка:</strong> {profileData.badgeNumber}</Typography>
+                  <Typography><strong>Код подразделения:</strong> {profileData.unitCode}</Typography>
+                  <Typography><strong>Звание:</strong> {profileData.rank}</Typography>
+                </>
+              )}
 
-            {user.user.passportData && (
-              <>
-                <Typography><strong>ФИО:</strong> {profileData.lastName} {profileData.firstName} {profileData.patronymic}</Typography>
-                <Typography><strong>Паспортные данные:</strong> {profileData.passportData}</Typography>
-                <Typography><strong>Адрес:</strong> {profileData.address}</Typography>
-              </>
-            )}
+              {profileData.role === 'OWNER' && profileData.passportData && (
+                <>
+                  <Typography><strong>ФИО:</strong> {profileData.lastName} {profileData.firstName} {profileData.patronymic}</Typography>
+                  <Typography><strong>Паспортные данные:</strong> {profileData.passportData}</Typography>
+                  <Typography><strong>Адрес:</strong> {profileData.address}</Typography>
+                </>
+              )}
 
-            {user.user.taxNumber && (
-              <>
-                <Typography><strong>Название компании:</strong> {profileData.companyName}</Typography>
-                <Typography><strong>ИНН:</strong> {profileData.taxNumber}</Typography>
-                <Typography><strong>Адрес:</strong> {profileData.address}</Typography>
-              </>
-            )}
-          </Paper>
-        )
+              {profileData.role === 'OWNER' && profileData.taxNumber && (
+                <>
+                  <Typography><strong>Название компании:</strong> {profileData.companyName}</Typography>
+                  <Typography><strong>ИНН:</strong> {profileData.taxNumber}</Typography>
+                  <Typography><strong>Адрес:</strong> {profileData.address}</Typography>
+                </>
+              )}
+            </Paper>
+          )}
+
+          {/* Если нет данных и это не админ */}
+          {user.user.role !== 'ADMIN' && !profileData && !loading && (
+            <Alert severity="info" sx={{ mt: 2 }}>
+              Нет данных для отображения
+            </Alert>
+          )}
+        </>
       )}
     </Container>
   );
+
 });
 
 export default ProfilePage;
