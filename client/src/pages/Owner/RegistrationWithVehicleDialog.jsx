@@ -81,19 +81,116 @@ function RegistrationWithVehicleDialog({ open, onClose, onSuccess }) {
 
   const validate = () => {
     const errs = {};
-    if (!vehicle.vin.match(/^[A-HJ-NPR-Z0-9]{17}$/)) errs.vin = 'VIN должен быть 17 символов';
-    if (!vehicle.makeAndModel) errs.makeAndModel = 'Обязательно';
-    if (!vehicle.releaseYear.match(/^(19|20)\d{2}$/)) errs.releaseYear = 'Год некорректен';
-    if (!vehicle.manufacture) errs.manufacture = 'Обязательно';
-    if (!['FWD', 'RWD', 'AWD', '4WD'].includes(vehicle.typeOfDrive)) errs.typeOfDrive = 'Неверно';
-    if (!vehicle.power.match(/^\d+\s*кВт\/\d+\s*л\.с\.$/)) errs.power = 'Неверный формат мощности';
-    if (!vehicle.bodyColor) errs.bodyColor = 'Обязательно';
-    if (!['MT', 'AT', 'AMT', 'CVT', 'DCT', 'DSG'].includes(vehicle.transmissionType)) errs.transmissionType = 'Неверно';
-    if (!['Правостороннее', 'Левостороннее'].includes(vehicle.steeringWheel)) errs.steeringWheel = 'Неверно';
-    if (!vehicle.engineModel.match(/^[A-Z0-9-]+$/)) errs.engineModel = 'Модель некорректна';
-    if (!vehicle.engineVolume || vehicle.engineVolume < 500 || vehicle.engineVolume > 7400) errs.engineVolume = 'Объем от 500 до 7400';
-    if (!opData.unitCode.match(/^\d{6}$/)) errs.unitCode = 'Код подразделения — 6 цифр';
-    if (!opData.operationBase.trim()) errs.operationBase = 'Основание обязательно';
+    
+    if (!vehicle.vin) {
+      errs.vin = 'VIN обязателен';
+    } else if (!vehicle.vin.match(/^[A-HJ-NPR-Z0-9]{17}$/i)) {
+      errs.vin = 'VIN должен состоять из 17 символов (латинские буквы, кроме I, O, Q, и цифры)';
+    } else if (vehicle.vin.match(/^\d+$/)) {
+      errs.vin = 'VIN не может состоять только из цифр';
+    }
+
+    if (!vehicle.makeAndModel) {
+      errs.makeAndModel = 'Обязательно';
+    } else if (vehicle.makeAndModel.length < 2) {
+      errs.makeAndModel = 'Минимум 2 символа';
+    } else if (vehicle.makeAndModel.length > 100) {
+      errs.makeAndModel = 'Максимум 100 символов';
+    } else if (vehicle.makeAndModel.match(/^\d+$/)) {
+      errs.makeAndModel = 'Марка и модель не могут состоять только из цифр';
+    } else if (vehicle.makeAndModel.match(/^[0-9\s]+$/)) {
+      errs.makeAndModel = 'Марка и модель должны содержать буквы';
+    }
+
+    if (!vehicle.manufacture) {
+      errs.manufacture = 'Обязательно';
+    } else if (vehicle.manufacture.length < 2) {
+      errs.manufacture = 'Минимум 2 символа';
+    } else if (vehicle.manufacture.length > 100) {
+      errs.manufacture = 'Максимум 100 символов';
+    } else if (vehicle.manufacture.match(/^\d+$/)) {
+      errs.manufacture = 'Изготовитель не может состоять только из цифр';
+    } else if (vehicle.manufacture.match(/^[0-9\s]+$/)) {
+      errs.manufacture = 'Изготовитель должен содержать буквы';
+    }
+
+    if (!vehicle.bodyColor) {
+      errs.bodyColor = 'Обязательно';
+    } else if (vehicle.bodyColor.length < 2) {
+      errs.bodyColor = 'Минимум 2 символа';
+    } else if (vehicle.bodyColor.length > 50) {
+      errs.bodyColor = 'Максимум 50 символов';
+    } else if (vehicle.bodyColor.match(/^\d+$/)) {
+      errs.bodyColor = 'Цвет должен быть указан буквами (например: "Белый", "Черный", "Синий")';
+    } else if (vehicle.bodyColor.match(/^[0-9\s]+$/)) {
+      errs.bodyColor = 'Цвет не может состоять только из цифр, укажите название цвета';
+    } else if (!vehicle.bodyColor.match(/[а-яА-Яa-zA-Z]/)) {
+      errs.bodyColor = 'Цвет должен содержать буквы (например: "Красный", "Silver", "Black")';
+    }
+
+    if (!vehicle.engineModel) {
+      errs.engineModel = 'Модель двигателя обязательна';
+    } else if (!vehicle.engineModel.match(/^[A-Z0-9-]+$/i)) {
+      errs.engineModel = 'Модель двигателя должна содержать только латинские буквы, цифры и дефис';
+    } else if (vehicle.engineModel.match(/^\d+$/)) {
+      errs.engineModel = 'Модель двигателя не может состоять только из цифр';
+    }
+
+    const currentYear = new Date().getFullYear();
+    if (!vehicle.releaseYear) {
+      errs.releaseYear = 'Год выпуска обязателен';
+    } else if (!vehicle.releaseYear.match(/^(19|20)\d{2}$/)) {
+      errs.releaseYear = `Год выпуска должен быть в формате YYYY (1950-${currentYear})`;
+    } else if (parseInt(vehicle.releaseYear) > currentYear) {
+      errs.releaseYear = `Год не может быть больше ${currentYear}`;
+    }
+
+    if (!vehicle.typeOfDrive) {
+      errs.typeOfDrive = 'Выберите тип привода';
+    } else if (!['FWD', 'RWD', 'AWD', '4WD'].includes(vehicle.typeOfDrive)) {
+      errs.typeOfDrive = 'Неверно';
+    }
+
+    if (!vehicle.power) {
+      errs.power = 'Мощность обязательна';
+    } else if (!vehicle.power.match(/^\d+\s*кВт\/\d+\s*л\.с\.$/)) {
+      errs.power = 'Формат: "число кВт/число л.с." (например: "150 кВт/204 л.с.")';
+    }
+
+    if (!vehicle.transmissionType) {
+      errs.transmissionType = 'Выберите тип коробки передач';
+    } else if (!['MT', 'AT', 'AMT', 'CVT', 'DCT', 'DSG'].includes(vehicle.transmissionType)) {
+      errs.transmissionType = 'Неверно';
+    }
+
+    if (!vehicle.steeringWheel) {
+      errs.steeringWheel = 'Выберите положение руля';
+    } else if (!['Правостороннее', 'Левостороннее'].includes(vehicle.steeringWheel)) {
+      errs.steeringWheel = 'Неверно';
+    }
+
+    if (!vehicle.engineVolume) {
+      errs.engineVolume = 'Объем двигателя обязателен';
+    } else if (isNaN(vehicle.engineVolume)) {
+      errs.engineVolume = 'Объем двигателя должен быть числом';
+    } else if (vehicle.engineVolume < 500) {
+      errs.engineVolume = 'Объем двигателя должен быть не менее 500 см³';
+    } else if (vehicle.engineVolume > 7400) {
+      errs.engineVolume = 'Объем двигателя должен быть не более 7400 см³';
+    }
+
+    if (!opData.unitCode) {
+      errs.unitCode = 'Код подразделения обязателен';
+    } else if (!opData.unitCode.match(/^\d{6}$/)) {
+      errs.unitCode = 'Код подразделения должен состоять из 6 цифр';
+    }
+
+    if (!opData.operationBase || !opData.operationBase.trim()) {
+      errs.operationBase = 'Основание операции обязательно';
+    } else if (opData.operationBase.trim().match(/^\d+$/)) {
+      errs.operationBase = 'Основание не может состоять только из цифр';
+    }
+
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -101,9 +198,24 @@ function RegistrationWithVehicleDialog({ open, onClose, onSuccess }) {
   const handleSubmit = async () => {
     if (!validate()) return;
     try {
-      let vin = vehicle.vin;
+      const vehicleData = {
+        vin: vehicle.vin.toUpperCase(), 
+        makeAndModel: vehicle.makeAndModel,
+        releaseYear: vehicle.releaseYear,
+        manufacture: vehicle.manufacture,
+        typeOfDrive: vehicle.typeOfDrive,
+        power: vehicle.power,
+        hasChassisNumber: vehicle.hasChassisNumber,
+        bodyColor: vehicle.bodyColor,
+        transmissionType: vehicle.transmissionType,
+        steeringWheel: vehicle.steeringWheel,
+        engineModel: vehicle.engineModel.toUpperCase(), 
+        engineVolume: Number(vehicle.engineVolume) 
+      };
+
+      let vin = vehicleData.vin;
       try {
-        const vehicleRes = await api.post('/owner/vehicles', vehicle);
+        const vehicleRes = await api.post('/owner/vehicles', vehicleData);
         vin = vehicleRes.data.data.vin;
       } catch (err) {
         if (err.response?.status === 409) {
