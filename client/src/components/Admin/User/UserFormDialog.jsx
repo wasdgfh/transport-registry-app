@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
-  Button, TextField, MenuItem, Box, Autocomplete, CircularProgress
-} from '@mui/material';
-
+  Button, TextField, MenuItem, Box, Autocomplete
+} from '@mui/material'; 
 import debounce from 'lodash.debounce';
 import api from '../../../http';
 
@@ -31,10 +30,17 @@ function UserFormDialog({ open, onClose, onSubmit, editingData }) {
   const [loadingBadge, setLoadingBadge] = useState(false);
   const [badgeInput, setBadgeInput] = useState('');
 
-
   useEffect(() => {
     if (editingData) {
-      setForm({ ...editingData, password: '' }); 
+      setForm({ ...editingData, password: '' });
+      if (editingData.passportData) {
+        setOwnerInput(editingData.passportData);
+      } else if (editingData.taxNumber) {
+        setOwnerInput(editingData.taxNumber);
+      }
+      if (editingData.badgeNumber) {
+        setBadgeInput(editingData.badgeNumber);
+      }
     } else {
       setForm({
         email: '',
@@ -44,23 +50,30 @@ function UserFormDialog({ open, onClose, onSubmit, editingData }) {
         taxNumber: '',
         badgeNumber: ''
       });
+      setOwnerInput('');
+      setBadgeInput('');
     }
-  }, [editingData]);
+  }, [editingData, open]);
 
   const handleChange = (field) => (e) => {
     const value = e.target.value;
-
-    if (field === 'passportData' && value.trim()) {
-      setForm((prev) => ({ ...prev, passportData: value, taxNumber: '' }));
-    } else if (field === 'taxNumber' && value.trim()) {
-      setForm((prev) => ({ ...prev, taxNumber: value, passportData: '' }));
-    } else {
-      setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => ({ ...prev, [field]: value }));
+    
+    if (field === 'role') {
+      setForm(prev => ({
+        ...prev,
+        passportData: '',
+        taxNumber: '',
+        badgeNumber: ''
+      }));
+      setOwnerInput('');
+      setBadgeInput('');
     }
   };
 
   const handleSubmit = () => {
     const cleaned = { ...form };
+    const isCreating = !editingData;
 
     if (!isCreating) {
       delete cleaned.id;
@@ -75,10 +88,9 @@ function UserFormDialog({ open, onClose, onSubmit, editingData }) {
     onSubmit(cleaned);
   };
 
-
-  const isCreating = !editingData;
-
   const fetchOwners = debounce(async (input, type) => {
+    if (!input || input.length < 2) return;
+    
     setLoadingOwner(true);
     try {
       if (type === 'passport') {
@@ -87,7 +99,8 @@ function UserFormDialog({ open, onClose, onSubmit, editingData }) {
         });
         setOwnerOptions(res.data.data.map(p => ({
           label: `${p.passportData} — ${p.lastName} ${p.firstName} ${p.patronymic}`,
-          value: p.passportData
+          value: p.passportData,
+          type: 'passport'
         })));
       } else if (type === 'tax') {
         const res = await api.get('/employee/legal-entities', {
@@ -95,17 +108,21 @@ function UserFormDialog({ open, onClose, onSubmit, editingData }) {
         });
         setOwnerOptions(res.data.data.map(e => ({
           label: `${e.taxNumber} — ${e.companyName}`,
-          value: e.taxNumber
+          value: e.taxNumber,
+          type: 'tax'
         })));
       }
     } catch (e) {
       console.error('Ошибка загрузки владельцев:', e);
+      setOwnerOptions([]);
     } finally {
       setLoadingOwner(false);
     }
   }, 300);
 
   const fetchBadges = debounce(async (input) => {
+    if (!input || input.length < 2) return;
+    
     setLoadingBadge(true);
     try {
       const res = await api.get('/admin/employees', {
@@ -118,10 +135,13 @@ function UserFormDialog({ open, onClose, onSubmit, editingData }) {
       })));
     } catch (e) {
       console.error('Ошибка загрузки значков:', e);
+      setBadgeOptions([]);
     } finally {
       setLoadingBadge(false);
     }
   }, 300);
+
+  const isCreating = !editingData;
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
@@ -171,50 +191,49 @@ function UserFormDialog({ open, onClose, onSubmit, editingData }) {
           )}
 
           {form.role === 'OWNER' && (
-            <>
-              <Autocomplete
-                freeSolo
-                clearOnEscape
-                options={ownerOptions}
-                loading={loadingOwner}
-                value={ownerInput}
-                onInputChange={(_, value, reason) => {
-                  if (reason === 'clear') {
-                    setOwnerInput('');
-                    setForm(prev => ({ ...prev, passportData: '', taxNumber: '' }));
-                    return;
-                  }
-
-                  setOwnerInput(value);
-
-                  if (value.length >= 2) {
-                    const isTax = /^\d{6,}$/.test(value);
-                    fetchOwners(value, isTax ? 'tax' : 'passport');
-                  }
-                }}
-                onChange={(_, option) => {
-                  if (option && typeof option !== 'string') {
-                    const isTax = /^\d{6,}$/.test(option.value);
-                    setForm(prev => ({
-                      ...prev,
-                      passportData: isTax ? '' : option.value,
-                      taxNumber: isTax ? option.value : ''
-                    }));
-                    setOwnerInput(option.value);
-                  }
-                }}
-                getOptionLabel={(option) =>
-                  typeof option === 'string' ? option : option.label
+            <Autocomplete
+              freeSolo
+              clearOnEscape
+              options={ownerOptions}
+              loading={loadingOwner}
+              inputValue={ownerInput}
+              onInputChange={(_, value, reason) => {
+                setOwnerInput(value || '');
+                
+                if (reason === 'clear') {
+                  setForm(prev => ({ ...prev, passportData: '', taxNumber: '' }));
+                  setOwnerOptions([]);
+                  return;
                 }
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Паспорт или ИНН"
-                    fullWidth
-                  />
-                )}
-              />
-            </>
+
+                if (value && value.length >= 2) {
+                  const isTax = /^\d{6,}$/.test(value);
+                  fetchOwners(value, isTax ? 'tax' : 'passport');
+                } else {
+                  setOwnerOptions([]);
+                }
+              }}
+              onChange={(_, option) => {
+                if (option && typeof option !== 'string') {
+                  setForm(prev => ({
+                    ...prev,
+                    passportData: option.type === 'passport' ? option.value : '',
+                    taxNumber: option.type === 'tax' ? option.value : ''
+                  }));
+                  setOwnerInput(option.value);
+                }
+              }}
+              getOptionLabel={(option) =>
+                typeof option === 'string' ? option : option.label
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Паспорт или ИНН"
+                  fullWidth
+                />
+              )}
+            />
           )}
 
           {form.role === 'EMPLOYEE' && (
@@ -223,16 +242,21 @@ function UserFormDialog({ open, onClose, onSubmit, editingData }) {
               clearOnEscape
               options={badgeOptions}
               loading={loadingBadge}
-              value={badgeInput}
+              inputValue={badgeInput}
               onInputChange={(_, value, reason) => {
+                setBadgeInput(value || '');
+                
                 if (reason === 'clear') {
-                  setBadgeInput('');
                   setForm(prev => ({ ...prev, badgeNumber: '' }));
+                  setBadgeOptions([]);
                   return;
                 }
 
-                setBadgeInput(value);
-                if (value.length >= 2) fetchBadges(value);
+                if (value && value.length >= 2) {
+                  fetchBadges(value);
+                } else {
+                  setBadgeOptions([]);
+                }
               }}
               onChange={(_, option) => {
                 if (option && typeof option !== 'string') {

@@ -3,6 +3,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Button, Box
 } from '@mui/material';
+import { validate } from '../../../utils/validationStrategies';  
 
 const initialForm = {
   unitCode: '',
@@ -28,23 +29,14 @@ function DepartmentFormDialog({ open, onClose, onSubmit, editingData }) {
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const validate = () => {
-    const newErrors = {};
-    if (!form.unitCode || form.unitCode.length !== 6) {
-      newErrors.unitCode = 'Код должен содержать 6 символов';
-    }
-    if (!form.departmentName || form.departmentName.length < 8) {
-      newErrors.departmentName = 'Название минимум 8 символов';
-    }
-    if (!form.address || form.address.length < 8) {
-      newErrors.address = 'Адрес минимум 8 символов';
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const validateForm = () => {
+    const validationErrors = validate('department', form);
+    setErrors(validationErrors);
+    return Object.keys(validationErrors).length === 0;
   };
 
   const handleSubmit = () => {
-    if (validate()) {
+    if (validateForm()) {
       const dataToSend = editingData
         ? { departmentName: form.departmentName, address: form.address }
         : form;
