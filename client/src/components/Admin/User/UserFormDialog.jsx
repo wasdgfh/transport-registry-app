@@ -1,14 +1,8 @@
 import { useEffect, useState } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
-<<<<<<< HEAD
-  Button, TextField, MenuItem, Box, Autocomplete, CircularProgress
-} from '@mui/material';
-
-=======
   Button, TextField, MenuItem, Box, Autocomplete
 } from '@mui/material'; 
->>>>>>> develop
 import debounce from 'lodash.debounce';
 import api from '../../../http';
 
@@ -36,12 +30,6 @@ function UserFormDialog({ open, onClose, onSubmit, editingData }) {
   const [loadingBadge, setLoadingBadge] = useState(false);
   const [badgeInput, setBadgeInput] = useState('');
 
-<<<<<<< HEAD
-
-  useEffect(() => {
-    if (editingData) {
-      setForm({ ...editingData, password: '' }); 
-=======
   useEffect(() => {
     if (editingData) {
       setForm({ ...editingData, password: '' });
@@ -53,7 +41,6 @@ function UserFormDialog({ open, onClose, onSubmit, editingData }) {
       if (editingData.badgeNumber) {
         setBadgeInput(editingData.badgeNumber);
       }
->>>>>>> develop
     } else {
       setForm({
         email: '',
@@ -63,20 +50,6 @@ function UserFormDialog({ open, onClose, onSubmit, editingData }) {
         taxNumber: '',
         badgeNumber: ''
       });
-<<<<<<< HEAD
-    }
-  }, [editingData]);
-
-  const handleChange = (field) => (e) => {
-    const value = e.target.value;
-
-    if (field === 'passportData' && value.trim()) {
-      setForm((prev) => ({ ...prev, passportData: value, taxNumber: '' }));
-    } else if (field === 'taxNumber' && value.trim()) {
-      setForm((prev) => ({ ...prev, taxNumber: value, passportData: '' }));
-    } else {
-      setForm((prev) => ({ ...prev, [field]: value }));
-=======
       setOwnerInput('');
       setBadgeInput('');
     }
@@ -95,16 +68,12 @@ function UserFormDialog({ open, onClose, onSubmit, editingData }) {
       }));
       setOwnerInput('');
       setBadgeInput('');
->>>>>>> develop
     }
   };
 
   const handleSubmit = () => {
     const cleaned = { ...form };
-<<<<<<< HEAD
-=======
     const isCreating = !editingData;
->>>>>>> develop
 
     if (!isCreating) {
       delete cleaned.id;
@@ -119,16 +88,9 @@ function UserFormDialog({ open, onClose, onSubmit, editingData }) {
     onSubmit(cleaned);
   };
 
-<<<<<<< HEAD
-
-  const isCreating = !editingData;
-
-  const fetchOwners = debounce(async (input, type) => {
-=======
   const fetchOwners = debounce(async (input, type) => {
     if (!input || input.length < 2) return;
     
->>>>>>> develop
     setLoadingOwner(true);
     try {
       if (type === 'passport') {
@@ -137,12 +99,8 @@ function UserFormDialog({ open, onClose, onSubmit, editingData }) {
         });
         setOwnerOptions(res.data.data.map(p => ({
           label: `${p.passportData} — ${p.lastName} ${p.firstName} ${p.patronymic}`,
-<<<<<<< HEAD
-          value: p.passportData
-=======
           value: p.passportData,
           type: 'passport'
->>>>>>> develop
         })));
       } else if (type === 'tax') {
         const res = await api.get('/employee/legal-entities', {
@@ -150,31 +108,21 @@ function UserFormDialog({ open, onClose, onSubmit, editingData }) {
         });
         setOwnerOptions(res.data.data.map(e => ({
           label: `${e.taxNumber} — ${e.companyName}`,
-<<<<<<< HEAD
-          value: e.taxNumber
-=======
           value: e.taxNumber,
           type: 'tax'
->>>>>>> develop
         })));
       }
     } catch (e) {
       console.error('Ошибка загрузки владельцев:', e);
-<<<<<<< HEAD
-=======
       setOwnerOptions([]);
->>>>>>> develop
     } finally {
       setLoadingOwner(false);
     }
   }, 300);
 
   const fetchBadges = debounce(async (input) => {
-<<<<<<< HEAD
-=======
     if (!input || input.length < 2) return;
     
->>>>>>> develop
     setLoadingBadge(true);
     try {
       const res = await api.get('/admin/employees', {
@@ -187,20 +135,14 @@ function UserFormDialog({ open, onClose, onSubmit, editingData }) {
       })));
     } catch (e) {
       console.error('Ошибка загрузки значков:', e);
-<<<<<<< HEAD
-=======
       setBadgeOptions([]);
->>>>>>> develop
     } finally {
       setLoadingBadge(false);
     }
   }, 300);
 
-<<<<<<< HEAD
-=======
   const isCreating = !editingData;
 
->>>>>>> develop
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>{isCreating ? 'Создать пользователя' : 'Редактировать пользователя'}</DialogTitle>
@@ -249,52 +191,6 @@ function UserFormDialog({ open, onClose, onSubmit, editingData }) {
           )}
 
           {form.role === 'OWNER' && (
-<<<<<<< HEAD
-            <>
-              <Autocomplete
-                freeSolo
-                clearOnEscape
-                options={ownerOptions}
-                loading={loadingOwner}
-                value={ownerInput}
-                onInputChange={(_, value, reason) => {
-                  if (reason === 'clear') {
-                    setOwnerInput('');
-                    setForm(prev => ({ ...prev, passportData: '', taxNumber: '' }));
-                    return;
-                  }
-
-                  setOwnerInput(value);
-
-                  if (value.length >= 2) {
-                    const isTax = /^\d{6,}$/.test(value);
-                    fetchOwners(value, isTax ? 'tax' : 'passport');
-                  }
-                }}
-                onChange={(_, option) => {
-                  if (option && typeof option !== 'string') {
-                    const isTax = /^\d{6,}$/.test(option.value);
-                    setForm(prev => ({
-                      ...prev,
-                      passportData: isTax ? '' : option.value,
-                      taxNumber: isTax ? option.value : ''
-                    }));
-                    setOwnerInput(option.value);
-                  }
-                }}
-                getOptionLabel={(option) =>
-                  typeof option === 'string' ? option : option.label
-                }
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Паспорт или ИНН"
-                    fullWidth
-                  />
-                )}
-              />
-            </>
-=======
             <Autocomplete
               freeSolo
               clearOnEscape
@@ -338,7 +234,6 @@ function UserFormDialog({ open, onClose, onSubmit, editingData }) {
                 />
               )}
             />
->>>>>>> develop
           )}
 
           {form.role === 'EMPLOYEE' && (
@@ -347,18 +242,6 @@ function UserFormDialog({ open, onClose, onSubmit, editingData }) {
               clearOnEscape
               options={badgeOptions}
               loading={loadingBadge}
-<<<<<<< HEAD
-              value={badgeInput}
-              onInputChange={(_, value, reason) => {
-                if (reason === 'clear') {
-                  setBadgeInput('');
-                  setForm(prev => ({ ...prev, badgeNumber: '' }));
-                  return;
-                }
-
-                setBadgeInput(value);
-                if (value.length >= 2) fetchBadges(value);
-=======
               inputValue={badgeInput}
               onInputChange={(_, value, reason) => {
                 setBadgeInput(value || '');
@@ -374,7 +257,6 @@ function UserFormDialog({ open, onClose, onSubmit, editingData }) {
                 } else {
                   setBadgeOptions([]);
                 }
->>>>>>> develop
               }}
               onChange={(_, option) => {
                 if (option && typeof option !== 'string') {
@@ -407,8 +289,4 @@ function UserFormDialog({ open, onClose, onSubmit, editingData }) {
   );
 }
 
-<<<<<<< HEAD
 export default UserFormDialog;
-=======
-export default UserFormDialog;
->>>>>>> develop

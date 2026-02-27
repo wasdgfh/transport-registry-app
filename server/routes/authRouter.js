@@ -14,10 +14,5 @@ router.get('/check', authMiddleware, authController.check);
 
 router.post('/register/natural-person', ownerRegistrationController.createNaturalPerson);
 router.post('/register/legal-entity', ownerRegistrationController.createLegalEntity);
-<<<<<<< HEAD
-router.delete('/natural-persons/:passportData', ownerRegistrationController.deleteNaturalPerson);
-router.delete('/legal-entities/:taxNumber', ownerRegistrationController.deleteLegalEntity);
-=======
->>>>>>> develop
 
 module.exports = router;

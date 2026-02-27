@@ -81,21 +81,6 @@ function RegistrationWithVehicleDialog({ open, onClose, onSuccess }) {
 
   const validate = () => {
     const errs = {};
-<<<<<<< HEAD
-    if (!vehicle.vin.match(/^[A-HJ-NPR-Z0-9]{17}$/)) errs.vin = 'VIN должен быть 17 символов';
-    if (!vehicle.makeAndModel) errs.makeAndModel = 'Обязательно';
-    if (!vehicle.releaseYear.match(/^(19|20)\d{2}$/)) errs.releaseYear = 'Год некорректен';
-    if (!vehicle.manufacture) errs.manufacture = 'Обязательно';
-    if (!['FWD', 'RWD', 'AWD', '4WD'].includes(vehicle.typeOfDrive)) errs.typeOfDrive = 'Неверно';
-    if (!vehicle.power.match(/^\d+\s*кВт\/\d+\s*л\.с\.$/)) errs.power = 'Неверный формат мощности';
-    if (!vehicle.bodyColor) errs.bodyColor = 'Обязательно';
-    if (!['MT', 'AT', 'AMT', 'CVT', 'DCT', 'DSG'].includes(vehicle.transmissionType)) errs.transmissionType = 'Неверно';
-    if (!['Правостороннее', 'Левостороннее'].includes(vehicle.steeringWheel)) errs.steeringWheel = 'Неверно';
-    if (!vehicle.engineModel.match(/^[A-Z0-9-]+$/)) errs.engineModel = 'Модель некорректна';
-    if (!vehicle.engineVolume || vehicle.engineVolume < 500 || vehicle.engineVolume > 7400) errs.engineVolume = 'Объем от 500 до 7400';
-    if (!opData.unitCode.match(/^\d{6}$/)) errs.unitCode = 'Код подразделения — 6 цифр';
-    if (!opData.operationBase.trim()) errs.operationBase = 'Основание обязательно';
-=======
     
     if (!vehicle.vin) {
       errs.vin = 'VIN обязателен';
@@ -206,7 +191,6 @@ function RegistrationWithVehicleDialog({ open, onClose, onSuccess }) {
       errs.operationBase = 'Основание не может состоять только из цифр';
     }
 
->>>>>>> develop
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -214,11 +198,6 @@ function RegistrationWithVehicleDialog({ open, onClose, onSuccess }) {
   const handleSubmit = async () => {
     if (!validate()) return;
     try {
-<<<<<<< HEAD
-      let vin = vehicle.vin;
-      try {
-        const vehicleRes = await api.post('/owner/vehicles', vehicle);
-=======
       const vehicleData = {
         vin: vehicle.vin.toUpperCase(), 
         makeAndModel: vehicle.makeAndModel,
@@ -237,7 +216,6 @@ function RegistrationWithVehicleDialog({ open, onClose, onSuccess }) {
       let vin = vehicleData.vin;
       try {
         const vehicleRes = await api.post('/owner/vehicles', vehicleData);
->>>>>>> develop
         vin = vehicleRes.data.data.vin;
       } catch (err) {
         if (err.response?.status === 409) {

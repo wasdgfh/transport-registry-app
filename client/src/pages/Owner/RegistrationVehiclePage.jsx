@@ -8,18 +8,12 @@ function RegistrationVehiclePage() {
   const [successOpen, setSuccessOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-<<<<<<< HEAD
-  const handleSuccess = (message = 'Заявление успешно отправлено. Обратитесь в указанный вами регистрационный отдел.') => {
-    setOpen(false);
-    setSuccessMessage(message);
-=======
   const handleSuccess = (data) => {
     setOpen(false);
     if (typeof data === 'object' && data !== null) {
       const message = `Заявление успешно отправлено. Обратитесь в регистрационный отдел ${data.unitCode}.`;
       setSuccessMessage(message);
     } 
->>>>>>> develop
     setSuccessOpen(true);
   };
 

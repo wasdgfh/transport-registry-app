@@ -5,11 +5,8 @@ import {
 } from '@mui/material';
 import debounce from 'lodash.debounce';
 import api from '../../../http';
-<<<<<<< HEAD
-=======
 import { RANKS } from '../../../constants'; 
 import { validate } from '../../../utils/validationStrategies';
->>>>>>> develop
 
 const initialForm = {
   badgeNumber: '',
@@ -25,43 +22,12 @@ function EmployeeFormDialog({ open, onClose, onSubmit, editingData }) {
   const [errors, setErrors] = useState({});
   const [departOptions, setDepartOptions] = useState([]);
   const [loadingDeparts, setLoadingDeparts] = useState(false);
-<<<<<<< HEAD
-  const [selectedDepart, setSelectedDepart] = useState(null);
-
-  const validRanks = [
-    'Рядовой',
-    'Мл. сержант',
-    'Сержант',
-    'Ст. сержант',
-    'Старшина',
-    'Прапорщик',
-    'Ст. прапорщик',
-    'Мл. лейтенант',
-    'Лейтенант',
-    'Ст. лейтенант',
-    'Капитан',
-    'Майор',
-    'Подполковник',
-    'Полковник'
-  ];
-=======
->>>>>>> develop
 
   useEffect(() => {
     if (editingData) {
       setForm(editingData);
-<<<<<<< HEAD
-      setSelectedDepart({
-        label: `${editingData.unitCode} — ${editingData.departmentName || ''}`,
-        value: editingData.unitCode
-      });
     } else {
       setForm(initialForm);
-      setSelectedDepart(null);
-=======
-    } else {
-      setForm(initialForm);
->>>>>>> develop
     }
     setErrors({});
   }, [editingData, open]);
@@ -71,30 +37,6 @@ function EmployeeFormDialog({ open, onClose, onSubmit, editingData }) {
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
-<<<<<<< HEAD
-  const validate = () => {
-    const newErrors = {};
-    if (!form.badgeNumber.match(/^\d{2}-\d{4}$/)) {
-      newErrors.badgeNumber = 'Формат: 00-0000';
-    }
-    if (!form.unitCode || form.unitCode.length !== 6) {
-      newErrors.unitCode = '6 символов';
-    }
-    if (!validRanks.includes(form.rank)) {
-      newErrors.rank = 'Недопустимое звание';
-    } 
-    ['lastName', 'firstName', 'patronymic'].forEach(field => {
-      if (!form[field] || form[field].length < 2) {
-        newErrors[field] = 'Мин. 2 символа';
-      }
-    });
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = () => {
-    if (validate()) {
-=======
   const validateForm = () => {
     const validationErrors = validate('employee', form, { validRanks: RANKS });
     setErrors(validationErrors);
@@ -103,7 +45,6 @@ function EmployeeFormDialog({ open, onClose, onSubmit, editingData }) {
 
   const handleSubmit = () => {
     if (validateForm()) {
->>>>>>> develop
       const data = {
         unitCode: form.unitCode,
         lastName: form.lastName,
@@ -178,10 +119,6 @@ function EmployeeFormDialog({ open, onClose, onSubmit, editingData }) {
     }
   };
 
-<<<<<<< HEAD
-
-=======
->>>>>>> develop
   return (
     <Dialog open={open} onClose={onClose} fullWidth>
       <DialogTitle>{editingData ? 'Редактировать сотрудника' : 'Создать сотрудника'}</DialogTitle>
@@ -245,15 +182,6 @@ function EmployeeFormDialog({ open, onClose, onSubmit, editingData }) {
               )
             }}
           />
-<<<<<<< HEAD
-          <TextField label="Фамилия" name="lastName" value={form.lastName} onChange={handleChange} error={!!errors.lastName} helperText={errors.lastName} />
-          <TextField label="Имя" name="firstName" value={form.firstName} onChange={handleChange} error={!!errors.firstName} helperText={errors.firstName} />
-          <TextField label="Отчество" name="patronymic" value={form.patronymic} onChange={handleChange} error={!!errors.patronymic} helperText={errors.patronymic} />
-          <Autocomplete
-            freeSolo
-            clearOnEscape
-            options={validRanks}
-=======
           <TextField 
             label="Фамилия" 
             name="lastName" 
@@ -282,7 +210,6 @@ function EmployeeFormDialog({ open, onClose, onSubmit, editingData }) {
             freeSolo
             clearOnEscape
             options={RANKS}
->>>>>>> develop
             inputValue={form.rank}
             onInputChange={(_, value, reason) => {
               if (reason === 'clear') {
@@ -317,8 +244,4 @@ function EmployeeFormDialog({ open, onClose, onSubmit, editingData }) {
   );
 }
 
-<<<<<<< HEAD
 export default EmployeeFormDialog;
-=======
-export default EmployeeFormDialog;
->>>>>>> develop

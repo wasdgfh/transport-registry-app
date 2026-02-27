@@ -74,29 +74,6 @@ export default function RegisterLegalOwner() {
     setError(null);
 
     try {
-<<<<<<< HEAD
-        await http.post("/auth/register/legal-entity", {
-        isNaturalPerson: false,
-        taxNumber: form.taxNumber,
-        address: form.address,
-        companyName: form.companyName,
-        });
-
-        try {
-        await http.post("/auth/register/owner", {
-            email: form.email,
-            password: form.password,
-            role: "OWNER",
-            taxNumber: form.taxNumber,
-            isNaturalPerson: false
-        });
-        
-        navigate(LOGIN_ROUTE, { state: { registrationSuccess: true } });
-        } catch (userError) {
-        await http.delete(`/auth/legal-entities/${form.taxNumber}`);
-        throw userError;
-        }
-=======
       await http.post("/auth/register/legal-entity", {
       isNaturalPerson: false,
       taxNumber: form.taxNumber,
@@ -114,7 +91,6 @@ export default function RegisterLegalOwner() {
       
       navigate(LOGIN_ROUTE, { state: { registrationSuccess: true } });
         
->>>>>>> develop
     } catch (e) {
         console.error("Registration error:", e);
         setError(

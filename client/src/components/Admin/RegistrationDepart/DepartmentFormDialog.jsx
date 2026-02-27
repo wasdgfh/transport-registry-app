@@ -3,10 +3,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Button, Box
 } from '@mui/material';
-<<<<<<< HEAD
-=======
 import { validate } from '../../../utils/validationStrategies';  
->>>>>>> develop
 
 const initialForm = {
   unitCode: '',
@@ -32,25 +29,6 @@ function DepartmentFormDialog({ open, onClose, onSubmit, editingData }) {
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
-<<<<<<< HEAD
-  const validate = () => {
-    const newErrors = {};
-    if (!form.unitCode || form.unitCode.length !== 6) {
-      newErrors.unitCode = 'Код должен содержать 6 символов';
-    }
-    if (!form.departmentName || form.departmentName.length < 8) {
-      newErrors.departmentName = 'Название минимум 8 символов';
-    }
-    if (!form.address || form.address.length < 8) {
-      newErrors.address = 'Адрес минимум 8 символов';
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = () => {
-    if (validate()) {
-=======
   const validateForm = () => {
     const validationErrors = validate('department', form);
     setErrors(validationErrors);
@@ -59,7 +37,6 @@ function DepartmentFormDialog({ open, onClose, onSubmit, editingData }) {
 
   const handleSubmit = () => {
     if (validateForm()) {
->>>>>>> develop
       const dataToSend = editingData
         ? { departmentName: form.departmentName, address: form.address }
         : form;
@@ -110,8 +87,4 @@ function DepartmentFormDialog({ open, onClose, onSubmit, editingData }) {
   );
 }
 
-<<<<<<< HEAD
 export default DepartmentFormDialog;
-=======
-export default DepartmentFormDialog;
->>>>>>> develop
