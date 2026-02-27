@@ -84,6 +84,7 @@ export default function RegisterNaturalOwner() {
         firstName: form.firstName,
         patronymic: form.patronymic,
       });
+<<<<<<< HEAD
 
       try {
         await http.post("/auth/register/owner", {
@@ -99,6 +100,19 @@ export default function RegisterNaturalOwner() {
         await http.delete(`/auth/natural-persons/${form.passportData}`);
         throw userError;
       }
+=======
+      
+      await http.post("/auth/register/owner", {
+        email: form.email,
+        password: form.password,
+        role: "OWNER",
+        passportData: form.passportData,
+        isNaturalPerson: true
+      });
+      
+      navigate(LOGIN_ROUTE, { state: { registrationSuccess: true } });
+          
+>>>>>>> develop
     } catch (e) {
       console.error("Registration error:", e);
       setError(

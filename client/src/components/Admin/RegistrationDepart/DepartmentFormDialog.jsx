@@ -3,6 +3,10 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Button, Box
 } from '@mui/material';
+<<<<<<< HEAD
+=======
+import { validate } from '../../../utils/validationStrategies';  
+>>>>>>> develop
 
 const initialForm = {
   unitCode: '',
@@ -28,6 +32,7 @@ function DepartmentFormDialog({ open, onClose, onSubmit, editingData }) {
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
+<<<<<<< HEAD
   const validate = () => {
     const newErrors = {};
     if (!form.unitCode || form.unitCode.length !== 6) {
@@ -45,6 +50,16 @@ function DepartmentFormDialog({ open, onClose, onSubmit, editingData }) {
 
   const handleSubmit = () => {
     if (validate()) {
+=======
+  const validateForm = () => {
+    const validationErrors = validate('department', form);
+    setErrors(validationErrors);
+    return Object.keys(validationErrors).length === 0;
+  };
+
+  const handleSubmit = () => {
+    if (validateForm()) {
+>>>>>>> develop
       const dataToSend = editingData
         ? { departmentName: form.departmentName, address: form.address }
         : form;
@@ -95,4 +110,8 @@ function DepartmentFormDialog({ open, onClose, onSubmit, editingData }) {
   );
 }
 
+<<<<<<< HEAD
 export default DepartmentFormDialog;
+=======
+export default DepartmentFormDialog;
+>>>>>>> develop

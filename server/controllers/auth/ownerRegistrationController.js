@@ -79,6 +79,7 @@ class OwnerRegistrationController {
         }
     }
 
+<<<<<<< HEAD
     async deleteNaturalPerson(req, res, next) {
         const transaction = await sequelize.transaction();
         try {
@@ -180,6 +181,8 @@ class OwnerRegistrationController {
             next(e);
         }
     }
+=======
+>>>>>>> develop
 }
 
 module.exports = new OwnerRegistrationController();
